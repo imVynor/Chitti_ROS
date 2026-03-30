@@ -1,0 +1,6 @@
+string tour_id
+string[] custom_waypoints
+bool include_accessibility_stops
+---
+bool success
+string tour_description

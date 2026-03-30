@@ -1,0 +1,3 @@
+string output_device
+float32 volume
+bool spatial_audio_enabled

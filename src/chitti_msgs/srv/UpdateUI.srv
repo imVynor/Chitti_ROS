@@ -1,0 +1,5 @@
+string screen_name
+string[] parameters
+---
+bool success
+string response

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chitti Voice Input</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="/static/img/chitti-logo.png" alt="Chitti" class="logo">
+            <h1>🤖 Talk to Chitti</h1>
+            <p class="subtitle">Campus Guide Robot</p>
+        </div>
+        
+        <div class="content">
+            <div class="status" id="status">Tap and hold the button to speak...</div>
+            
+            <button id="recordButton" class="record-button">
+                <span class="mic-icon">🎤</span>
+            </button>
+            
+            <div class="result-container">
+                <div class="result-label">You said:</div>
+                <div class="result" id="transcription">
+                    <p class="placeholder">Your speech will appear here...</p>
+                </div>
+            </div>
+            
+            <div class="response-container">
+                <div class="result-label">Chitti says:</div>
+                <div class="response" id="response">
+                    <p class="placeholder">Response will appear here...</p>
+                </div>
+            </div>
+            
+            <div class="session-info">
+                <small id="sessionId">Session: Loading...</small>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Tips for best results:</strong></p>
+            <ul>
+                <li>Speak clearly and naturally</li>
+                <li>Use location names (Library, Academic Block, etc.)</li>
+                <li>Keep it short and simple</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/static/js/audio_recorder.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

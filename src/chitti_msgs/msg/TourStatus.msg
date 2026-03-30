@@ -1,0 +1,6 @@
+string tour_id
+string tour_name
+int32 current_waypoint
+int32 total_waypoints
+float32 progress_percentage
+string current_location_description

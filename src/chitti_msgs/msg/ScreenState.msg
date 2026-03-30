@@ -1,0 +1,5 @@
+string current_screen
+string[] available_options
+bool mic_button_enabled
+bool emergency_button_enabled
+float32 screen_brightness

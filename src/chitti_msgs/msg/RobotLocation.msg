@@ -1,0 +1,5 @@
+string current_zone
+string nearest_landmark
+float32 battery_percentage
+bool navigation_active
+geometry_msgs/Pose pose

@@ -1,0 +1,57 @@
+touchscreen:
+  resolution: "800x480"
+  orientation: "landscape"
+  brightness: 80
+
+home_screen:
+  title: "Welcome to IIT Gandhinagar"
+  subtitle: "Where would you like to go?"
+  
+  quick_locations:
+    - id: "academic_block"
+      name: "Academic Block"
+      icon: "school.png"
+      coordinates: [23.5937, 72.6837]
+    
+    - id: "library"
+      name: "Central Library"
+      icon: "library.png"
+      coordinates: [23.5940, 72.6840]
+    
+    - id: "cafeteria"
+      name: "Cafeteria"
+      icon: "restaurant.png"
+      coordinates: [23.5935, 72.6835]
+    
+    - id: "hostels"
+      name: "Student Hostels"
+      icon: "home.png"
+      coordinates: [23.5945, 72.6845]
+    
+    - id: "admin"
+      name: "Administration"
+      icon: "admin.png"
+      coordinates: [23.5942, 72.6842]
+    
+    - id: "auditorium"
+      name: "Main Auditorium"
+      icon: "theater.png"
+      coordinates: [23.5938, 72.6838]
+
+accessibility_options:
+  large_text: true
+  high_contrast: true
+  voice_guidance: true
+  wheelchair_routes: true
+  visual_indicators: true
+
+interaction_options:
+  mic_button:
+    enabled: true
+    label: "Ask Chitti"
+    color: "#007BFF"
+  
+  emergency_button:
+    enabled: true
+    label: "Emergency"
+    color: "#DC3545"

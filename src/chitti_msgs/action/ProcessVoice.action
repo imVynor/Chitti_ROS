@@ -1,0 +1,7 @@
+string voice_text
+string session_id
+---
+string result_text
+string intent
+---
+string current_processing_step

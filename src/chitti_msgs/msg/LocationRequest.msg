@@ -1,0 +1,5 @@
+string location_id
+string location_name
+geometry_msgs/Point coordinates
+bool urgent
+string accessibility_requirements

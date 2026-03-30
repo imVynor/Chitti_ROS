@@ -1,0 +1,6 @@
+string text
+string output_mode
+---
+bool success
+---
+float32 progress

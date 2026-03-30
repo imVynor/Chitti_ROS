@@ -1,0 +1,5 @@
+string mode
+float32 volume
+---
+bool success
+string current_mode

@@ -1,0 +1,7 @@
+string location_id
+bool guided_tour_mode
+string[] waypoints
+---
+chitti_msgs/RobotLocation result
+---
+std_msgs/String feedback

@@ -1,0 +1,7 @@
+string tour_id
+string tour_name
+---
+bool success
+---
+int32 current_waypoint
+float32 progress

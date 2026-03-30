@@ -1,0 +1,8 @@
+string destination_id
+bool guided_tour_mode
+string[] waypoints
+bool accessibility_route
+---
+bool success
+string message
+float32 estimated_duration
