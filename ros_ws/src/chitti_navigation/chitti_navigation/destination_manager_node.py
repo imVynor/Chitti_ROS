@@ -13,11 +13,11 @@ class DestinationManagerNode(Node):
         # Chitti location IDs mapped to GPS coordinates used by the friend planner.
         self.locations = {
             'academic_block': {'name': 'Academic Block', 'lat': 23.2116, 'lon': 72.6839},
-            'library': {'name': 'Central Library', 'lat': 23.2119, 'lon': 72.6844},
+            'library': {'name': 'Central Library', 'lat': 23.2146, 'lon': 72.6863},
             'cafeteria': {'name': 'Cafeteria', 'lat': 23.2109, 'lon': 72.6848},
-            'hostels': {'name': 'Student Hostels', 'lat': 23.2132, 'lon': 72.6860},
+            'hostels': {'name': 'Student Hostels', 'lat': 23.2119, 'lon': 72.6844},
             'admin': {'name': 'Administration Block', 'lat': 23.2126, 'lon': 72.6843},
-            'auditorium': {'name': 'Main Auditorium', 'lat': 23.2122, 'lon': 72.6828},
+            'auditorium': {'name': 'Main Auditorium', 'lat': 23.214361, 'lon': 72.685780},
         }
 
         self.location_pub = self.create_publisher(RobotLocation, '/robot/current_location', 10)

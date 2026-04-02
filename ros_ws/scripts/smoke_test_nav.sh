@@ -102,7 +102,7 @@ wait_for_global_path() {
     rm -f "${tmp_out}"
     return 1
   fi
-
+  sleep 5
   echo "[INFO] Triggering navigation service for destination_id=${DESTINATION_ID}"
   if ! timeout 20s ros2 service call /navigation/start_to_location chitti_msgs/srv/StartNavigation "{destination_id: '${DESTINATION_ID}', guided_tour_mode: false, waypoints: [], accessibility_route: false}" >/dev/null; then
     echo "[FAIL] Service call timed out or failed"

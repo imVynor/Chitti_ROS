@@ -17,11 +17,9 @@ class FakeSensorPublisher(Node):
 
         gps_msg = NavSatFix()
         gps_msg.header.stamp = now
-        gps_msg.header.frame_id = 'base_link'
-        gps_msg.status.status = NavSatStatus.STATUS_FIX
-        gps_msg.status.service = NavSatStatus.SERVICE_GPS
-        gps_msg.latitude = 23.214676
-        gps_msg.longitude = 72.686383
+        # Spawn the robot physically at the Hostels
+        gps_msg.latitude = 23.2119
+        gps_msg.longitude = 72.6844
         gps_msg.altitude = 81.0
         gps_msg.position_covariance = [
             6.25, 0.0, 0.0,
@@ -36,6 +34,7 @@ class FakeSensorPublisher(Node):
         imu_msg.header.frame_id = 'base_link'
         imu_msg.orientation.x = 0.0
         imu_msg.orientation.y = 0.0
+        # Set yaw to +90 deg (North) so it faces the library path again!
         imu_msg.orientation.z = 0.707
         imu_msg.orientation.w = 0.707
         imu_msg.angular_velocity.x = 0.0
