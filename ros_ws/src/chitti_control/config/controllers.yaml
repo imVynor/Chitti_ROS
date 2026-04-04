@@ -1,0 +1,64 @@
+# ──────────────────────────────────────────────────────────────
+# diff_drive_controller configuration for Chitti (4WD skid-steer)
+# ──────────────────────────────────────────────────────────────
+
+controller_manager:
+  ros__parameters:
+    update_rate: 50  # Hz – controller loop rate
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+diff_drive_controller:
+  ros__parameters:
+    # ── Wheel joint names ──
+    # Left side: both front-left and rear-left are mechanically on the same side
+    left_wheel_names:
+      - "front_left_wheel_joint"
+      - "rear_left_wheel_joint"
+    right_wheel_names:
+      - "front_right_wheel_joint"
+      - "rear_right_wheel_joint"
+
+    # ── Wheel geometry ──
+    wheel_separation: 0.30       # metres  (track width from URDF)
+    wheel_radius: 0.05           # metres  (from URDF)
+
+    # ── Multipliers (1.0 = no correction) ──
+    wheel_separation_multiplier: 1.0
+    left_wheel_radius_multiplier: 1.0
+    right_wheel_radius_multiplier: 1.0
+
+    # ── Odometry ──
+    publish_rate: 50.0           # Hz
+    odom_frame_id: "odom"
+    base_frame_id: "base_footprint"
+    pose_covariance_diagonal: [0.01, 0.01, 0.0, 0.0, 0.0, 0.01]
+    twist_covariance_diagonal: [0.01, 0.0, 0.0, 0.0, 0.0, 0.01]
+    open_loop: true              # we have no encoders
+
+    # ── Command topic ──
+    cmd_vel_timeout: 0.5         # seconds – stop if no command received
+
+    # ── Velocity & acceleration limits ──
+    linear.x.has_velocity_limits: true
+    linear.x.has_acceleration_limits: true
+    linear.x.max_velocity: 0.5          # m/s
+    linear.x.min_velocity: -0.5
+    linear.x.max_acceleration: 1.0      # m/s²
+    linear.x.min_acceleration: -1.0
+
+    angular.z.has_velocity_limits: true
+    angular.z.has_acceleration_limits: true
+    angular.z.max_velocity: 2.0         # rad/s
+    angular.z.min_velocity: -2.0
+    angular.z.max_acceleration: 3.0
+    angular.z.min_acceleration: -3.0
+
+    # ── TF publishing ──
+    enable_odom_tf: true
+    publish_limited_velocity: true
+    use_stamped_vel: false

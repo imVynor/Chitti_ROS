@@ -1,0 +1,10 @@
+<library path="cytron_hardware_interface">
+  <class name="chitti_control/CytronHardwareInterface"
+         type="chitti_control::CytronHardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      4WD skid-steer hardware interface for 2x Cytron MDD10A motor drivers
+      controlled via Raspberry Pi GPIO (pigpio).
+    </description>
+  </class>
+</library>
