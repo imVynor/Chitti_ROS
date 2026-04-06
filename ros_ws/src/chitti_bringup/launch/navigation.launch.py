@@ -20,10 +20,6 @@ def generate_launch_description():
     ekf_config = os.path.join(bringup_dir, 'config', 'ekf.yaml')
     navsat_config = os.path.join(bringup_dir, 'config', 'navsat_transform.yaml')
 
-    robot_description_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(descr_dir, 'launch', 'description.launch.py'))
-    )
-
     ekf_node = Node(
         package='robot_localization', executable='ekf_node', name='ekf_filter_node',
         output='screen', parameters=[ekf_config]
@@ -39,6 +35,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='map_to_odom_static_tf',
+        condition=IfCondition(LaunchConfiguration('is_simulation')),
         arguments=[
             '--x', '81.84', '--y', '-500.94', '--z', '0', 
             '--roll', '0', '--pitch', '0', '--yaw', '0.0', 
@@ -47,7 +44,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        robot_description_launch,
         ekf_node,
         navsat_node,
         map_to_odom_tf,
@@ -55,6 +51,11 @@ def generate_launch_description():
             'use_fake_sensors',
             default_value='true',
             description='Publish fake GPS/IMU when physical sensors are unavailable',
+        ),
+        DeclareLaunchArgument(
+            'is_simulation',
+            default_value='true',
+            description='Toggle static map->odom localization and robot description for standalone simulation',
         ),
         DeclareLaunchArgument(
             'use_nav2_controller',
@@ -103,6 +104,7 @@ def generate_launch_description():
             name='controller_server',
             condition=IfCondition(LaunchConfiguration('use_nav2_controller')),
             output='screen',
+            remappings=[('cmd_vel', '/diff_drive_controller/cmd_vel')],
             parameters=[nav2_params_file]
         ),
         Node(
@@ -113,7 +115,8 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'autostart': True,
-                'node_names': ['controller_server']
+                'node_names': ['controller_server'],
+                'bond_timeout': 60.0
             }]
         ),
         Node(

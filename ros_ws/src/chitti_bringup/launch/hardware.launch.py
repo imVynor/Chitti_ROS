@@ -46,38 +46,47 @@ def generate_launch_description():
         output='screen',
     )
 
-    # ── Spawn controllers ──
-    # Note: Use a generous delay to ensure controller_manager is ready
-    spawn_controllers = TimerAction(
-        period=8.0,
-        actions=[
-            # Joint State Broadcaster
-            Node(
-                package='controller_manager',
-                executable='spawner',
-                arguments=[
-                    'joint_state_broadcaster',
-                    '--controller-manager-timeout', '10',
-                ],
-                output='screen',
-            ),
-            # Diff Drive Controller
-            # Corrected syntax: pass remappings as a single string to --controller-ros-args
-            Node(
-                package='controller_manager',
-                executable='spawner',
-                arguments=[
-                    'diff_drive_controller',
-                    '--controller-manager-timeout', '10',
-                    '--controller-ros-args', '--ros-args --remap /diff_drive_controller/cmd_vel:=/cmd_vel --remap /diff_drive_controller/odom:=/odom',
-                ],
-                output='screen',
-            ),
+    # ── Spawn controllers sequentially to prevent service deadlocks in Jazzy ──
+    # First spawn the Joint State Broadcaster after CM is up
+    joint_state_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'joint_state_broadcaster',
+            '--controller-manager-timeout', '20',
         ],
+        output='screen',
+    )
+    
+    spawn_joint_states = TimerAction(
+        period=5.0,
+        actions=[joint_state_spawner]
+    )
+
+    # Then spawn Diff Drive Controller ONCE Joint State Broadcaster finishes
+    from launch.actions import RegisterEventHandler
+    from launch.event_handlers import OnProcessExit
+    
+    diff_drive_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'diff_drive_controller',
+            '--controller-manager-timeout', '20'
+        ],
+        output='screen',
+    )
+    
+    spawn_diff_drive = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_spawner,
+            on_exit=[diff_drive_spawner],
+        )
     )
 
     return LaunchDescription([
         robot_state_publisher,
         controller_manager,
-        spawn_controllers,
+        spawn_joint_states,
+        spawn_diff_drive,
     ])
