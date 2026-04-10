@@ -2,6 +2,8 @@
 
 Use this checklist before any demo, navigation test, or full stack launch.
 
+For Raspberry Pi convenience, use `scripts/setup.sh` (bootstrap) and `scripts/build.sh` (fast builds).
+
 ## Scope
 
 This runbook is for the canonical workspace at `/home/anish/Chitti/ros_ws/ros_ws`.
@@ -39,6 +41,13 @@ Notes:
 - `ament_python` is a package build type, not a system apt dependency.
 - `python3-pyttsx3` is typically not available on Ubuntu apt for this image, so use `.venv`.
 
+Quick one-command alternative:
+
+```bash
+cd /home/anish/Chitti/ros_ws/ros_ws
+bash scripts/setup.sh
+```
+
 ## 3. Per-Session Setup
 
 ```bash
@@ -64,7 +73,7 @@ python3 -c "import pyttsx3, nltk; print('python_deps_ok')"
 rosdep check --from-paths src --ignore-src --rosdistro jazzy --skip-keys='ament_python python3-pyttsx3 python3-nltk'
 
 # Build check
-colcon build --symlink-install
+bash scripts/build.sh
 source install/setup.bash
 ```
 
