@@ -8,6 +8,7 @@ ROS 2 workspace for the Chitti campus guide robot stack, including:
 - custom interfaces (`chitti_msgs`)
 
 For a minimal runbook, see [QUICK_START.md](QUICK_START.md).
+For pre-operation checks before launches, see [PREOPER_README.md](PREOPER_README.md).
 
 ## Verified Packages
 
