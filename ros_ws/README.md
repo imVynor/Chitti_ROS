@@ -9,7 +9,8 @@ ROS 2 workspace for the Chitti campus guide robot stack, including:
 
 For a minimal runbook, see [QUICK_START.md](QUICK_START.md).
 For pre-operation checks before launches, see [PREOPER_README.md](PREOPER_README.md).
-For real sensor integration (NEO GPS, IMU), see [SENSOR_INTEGRATION.md](SENSOR_INTEGRATION.md).
+For real sensor integration (NEO GPS), see [SENSOR_INTEGRATION.md](SENSOR_INTEGRATION.md).
+For GPIO UART setup (direct Pi pins), see [GPIO_UART_SETUP.md](GPIO_UART_SETUP.md).
 
 ## Verified Packages
 

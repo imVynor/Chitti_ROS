@@ -16,6 +16,9 @@ GND           →  GND
 ```
 
 **Option B: Direct UART (Pi GPIO pins)**
+
+See [GPIO_UART_SETUP.md](GPIO_UART_SETUP.md) for detailed GPIO wiring and configuration.
+
 ```
 NEO Module    →  Raspberry Pi GPIO
 TX            →  GPIO 10 (RX, pin 19)
