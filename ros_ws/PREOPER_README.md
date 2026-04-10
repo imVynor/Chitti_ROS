@@ -4,6 +4,8 @@ Use this checklist before any demo, navigation test, or full stack launch.
 
 For Raspberry Pi convenience, use `scripts/setup.sh` (bootstrap) and `scripts/build.sh` (fast builds).
 
+For testing with real NEO GPS sensors, see [SENSOR_INTEGRATION.md](SENSOR_INTEGRATION.md).
+
 ## Scope
 
 This runbook is for the canonical workspace at `/home/anish/Chitti/ros_ws/ros_ws`.
