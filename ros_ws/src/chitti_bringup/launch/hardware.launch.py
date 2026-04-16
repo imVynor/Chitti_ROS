@@ -10,13 +10,23 @@ Starts:
 
 import os
 from launch import LaunchDescription 
-from launch.actions import TimerAction
-from launch_ros.actions import Node
+from launch.actions import TimerAction, DeclareLaunchArgument
+from launch.substitutions import Command, LaunchConfiguration
+from launch.conditions import UnlessCondition
+from launch_ros.actions import Node, SetParameter
+from launch_ros.parameter_descriptions import ParameterValue
 from ament_index_python.packages import get_package_share_directory
-import xacro
 
 
 def generate_launch_description():
+
+    use_sim = LaunchConfiguration('use_sim')
+    
+    use_sim_arg = DeclareLaunchArgument(
+        'use_sim',
+        default_value='false',
+        description='Use simulation (Gazebo)'
+    )
 
     # ── Paths ──
     description_pkg = get_package_share_directory('chitti_description')
@@ -26,15 +36,13 @@ def generate_launch_description():
     controllers_yaml = os.path.join(control_pkg, 'config', 'controllers.yaml')
                        
     # ── Process xacro → URDF string ──
-    robot_description_content = xacro.process_file(xacro_file).toxml()
+    robot_description = {'robot_description': ParameterValue(Command(['xacro ', xacro_file, ' use_sim:=', use_sim]), value_type=str)}
 
     # ── robot_state_publisher ──
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[{
-            'robot_description': robot_description_content,
-        }],
+        parameters=[robot_description],
         output='screen',
     )
 
@@ -44,6 +52,7 @@ def generate_launch_description():
         executable='ros2_control_node',
         parameters=[controllers_yaml],
         output='screen',
+        condition=UnlessCondition(use_sim),
     )
 
     # ── Spawn controllers sequentially to prevent service deadlocks in Jazzy ──
@@ -85,6 +94,8 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        use_sim_arg,
+        SetParameter(name='use_sim_time', value=use_sim),
         robot_state_publisher,
         controller_manager,
         spawn_joint_states,

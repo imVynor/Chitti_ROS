@@ -10,13 +10,21 @@ This single launch file initiates the entire real-world robot stack:
 
 import os
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction
+from launch.actions import IncludeLaunchDescription, TimerAction, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     bringup_dir = get_package_share_directory('chitti_bringup')
     
+    is_sim_arg = DeclareLaunchArgument(
+        'is_simulation',
+        default_value='true',
+        description='Toggle simulation (Fake sensors + map->odom static TF)'
+    )
+    is_sim = LaunchConfiguration('is_simulation')
+
     # ── 1. Launch Sensor Interfaces ──
     # Connects physical hardware pins to ROS topics
     sensors_launch = IncludeLaunchDescription(
@@ -26,22 +34,22 @@ def generate_launch_description():
     # ── 2. Launch Motor Controllers & Robot State ──
     # Spawns diff_drive_controller and transforms mathematically
     hardware_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch', 'hardware.launch.py'))
+        PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch', 'hardware.launch.py')),
+        launch_arguments={'use_sim': is_sim}.items()
     )
     
     # ── 3. Launch Navigation & Localization ──
     # Starts the EKF sensor fusion, NavSat, and higher-level pathing algorithms.
-    # Note: We set use_fake_sensors=false because we are using real ones,
-    # and is_simulation=false to let the EKF provide the dynamic map->odom TF.
     nav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch', 'navigation.launch.py')),
         launch_arguments={
-            'use_fake_sensors': 'false',
-            'is_simulation': 'false'  # Critical: Disables hardcoded position Locks
+            'use_fake_sensors': is_sim,
+            'is_simulation': is_sim
         }.items()
     )
 
     return LaunchDescription([
+        is_sim_arg,
         # Start sensors instantly
         sensors_launch,
         # Boot hardware 2 seconds later to ensure clean state

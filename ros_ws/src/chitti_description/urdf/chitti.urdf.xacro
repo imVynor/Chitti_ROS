@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <robot name="chitti" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="use_sim" default="false"/>
 
   <!-- ─────────────────────────────────────────
        DIMENSIONS  (all in metres)
@@ -142,22 +143,27 @@
   ═══════════════════════════════════════ -->
   <ros2_control name="chitti_hardware" type="system">
     <hardware>
-      <plugin>chitti_control/CytronHardwareInterface</plugin>
-      <!-- Motor Driver 1 – Channel A: Front Left -->
-      <param name="fl_pwm_pin">12</param>
-      <param name="fl_dir_pin">5</param>
-      <!-- Motor Driver 1 – Channel B: Rear Left -->
-      <param name="rl_pwm_pin">13</param>
-      <param name="rl_dir_pin">6</param>
-      <!-- Motor Driver 2 – Channel A: Front Right -->
-      <param name="fr_pwm_pin">18</param>
-      <param name="fr_dir_pin">16</param>
-      <!-- Motor Driver 2 – Channel B: Rear Right -->
-      <param name="rr_pwm_pin">19</param>
-      <param name="rr_dir_pin">20</param>
-      <!-- Wheel physical parameters -->
-      <param name="wheel_radius">0.05</param>
-      <param name="max_motor_rpm">200</param>
+      <xacro:if value="$(arg use_sim)">
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </xacro:if>
+      <xacro:unless value="$(arg use_sim)">
+        <plugin>chitti_control/CytronHardwareInterface</plugin>
+        <!-- Motor Driver 1 – Channel A: Front Left -->
+        <param name="fl_pwm_pin">12</param>
+        <param name="fl_dir_pin">5</param>
+        <!-- Motor Driver 1 – Channel B: Rear Left -->
+        <param name="rl_pwm_pin">13</param>
+        <param name="rl_dir_pin">6</param>
+        <!-- Motor Driver 2 – Channel A: Front Right -->
+        <param name="fr_pwm_pin">18</param>
+        <param name="fr_dir_pin">16</param>
+        <!-- Motor Driver 2 – Channel B: Rear Right -->
+        <param name="rr_pwm_pin">19</param>
+        <param name="rr_dir_pin">20</param>
+        <!-- Wheel physical parameters -->
+        <param name="wheel_radius">0.05</param>
+        <param name="max_motor_rpm">200</param>
+      </xacro:unless>
     </hardware>
 
     <joint name="front_left_wheel_joint">
@@ -181,5 +187,14 @@
       <state_interface name="velocity"/>
     </joint>
   </ros2_control>
+
+  <!-- Gazebo Simulation Control Plugin -->
+  <xacro:if value="$(arg use_sim)">
+    <gazebo>
+      <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(find chitti_control)/config/controllers.yaml</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:if>
 
 </robot>

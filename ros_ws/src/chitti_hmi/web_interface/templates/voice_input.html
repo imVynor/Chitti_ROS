@@ -3,54 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chitti Voice Input</title>
+    <title>Chitti Interaction Console</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
 <body>
-    <div class="container">
+    <div class="container compact">
         <div class="header">
-            <img src="/static/img/chitti-logo.png" alt="Chitti" class="logo">
-            <h1>🤖 Talk to Chitti</h1>
-            <p class="subtitle">Campus Guide Robot</p>
+            <h1>Chitti Touch Panel</h1>
+            <p class="subtitle">Tap destination or map point</p>
         </div>
         
         <div class="content">
-            <div class="status" id="status">Tap and hold the button to speak...</div>
-            
-            <button id="recordButton" class="record-button">
-                <span class="mic-icon">🎤</span>
-            </button>
-            
-            <div class="result-container">
-                <div class="result-label">You said:</div>
-                <div class="result" id="transcription">
-                    <p class="placeholder">Your speech will appear here...</p>
+            <div class="status" id="status">Ready. Choose a destination.</div>
+
+            <section class="card">
+                <h2 class="section-title">Destinations</h2>
+                <div id="destinationOptions" class="options-grid"></div>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">IITGN Live Map</h2>
+                <div id="iitgnMap" class="map-touch-area"></div>
+                <div class="map-caption">Tap on campus roads/buildings to set destination</div>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">Distance</h2>
+                <div class="nav-metrics">
+                    <div class="metric"><span>Selected</span><strong id="selectedDestination">-</strong></div>
+                    <div class="metric"><span>Planned Distance</span><strong id="plannedDistance">-</strong></div>
+                    <div class="metric"><span>Remaining Distance</span><strong id="remainingDistance">-</strong></div>
+                    <div class="metric"><span>ETA</span><strong id="eta">-</strong></div>
                 </div>
-            </div>
-            
-            <div class="response-container">
-                <div class="result-label">Chitti says:</div>
-                <div class="response" id="response">
-                    <p class="placeholder">Response will appear here...</p>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">Manual Drive</h2>
+                <div class="manual-controls" id="manualControls">
+                    <button type="button" class="drive-btn" data-linear="0.30" data-angular="0.00">Forward</button>
+                    <div class="drive-row">
+                        <button type="button" class="drive-btn" data-linear="0.00" data-angular="0.95">Turn Left</button>
+                        <button type="button" class="drive-btn stop-btn" id="stopDriveButton">STOP</button>
+                        <button type="button" class="drive-btn" data-linear="0.00" data-angular="-0.95">Turn Right</button>
+                    </div>
+                    <button type="button" class="drive-btn" data-linear="-0.25" data-angular="0.00">Reverse</button>
                 </div>
-            </div>
-            
+                <div class="map-caption">Press and hold a direction. Release to stop.</div>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">Voice</h2>
+                <button id="recordButton" class="record-button" type="button">
+                    <span class="mic-icon" id="micLabel">Start Mic</span>
+                </button>
+
+                <div class="result-container">
+                    <div class="result-label">Last voice status</div>
+                    <div class="result" id="transcription">
+                        <p class="placeholder">Tap Start Mic, then tap Stop Mic to send.</p>
+                    </div>
+                </div>
+            </section>
+
             <div class="session-info">
                 <small id="sessionId">Session: Loading...</small>
             </div>
         </div>
-        
-        <div class="footer">
-            <p><strong>Tips for best results:</strong></p>
-            <ul>
-                <li>Speak clearly and naturally</li>
-                <li>Use location names (Library, Academic Block, etc.)</li>
-                <li>Keep it short and simple</li>
-            </ul>
-        </div>
     </div>
 
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="/static/js/audio_recorder.js"></script>
     <script src="/static/js/app.js"></script>
 </body>

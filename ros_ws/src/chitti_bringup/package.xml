@@ -13,6 +13,10 @@
   <depend>rviz2</depend>
   <depend>nav2_controller</depend>
   <depend>nav2_lifecycle_manager</depend>
+  <depend>ros_gz_sim</depend>
+  <depend>chitti_description</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>joint_state_publisher</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

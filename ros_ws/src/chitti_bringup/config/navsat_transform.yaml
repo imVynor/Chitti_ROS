@@ -1,4 +1,4 @@
-navsat_transform_node:
+navsat_transform:
   ros__parameters:
 
     frequency: 30.0
@@ -10,6 +10,6 @@ navsat_transform_node:
     broadcast_utm_transform: false
     publish_filtered_gps: true
     use_odometry_yaw: false
-    wait_for_datum: false
+    wait_for_datum: true
 
-    datum: [23.2164, 72.6836, 0.0]
+    datum: [23.210142, 72.688199, 0.0]

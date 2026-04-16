@@ -7,7 +7,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from ament_index_python.packages import get_package_share_directory
 
 
@@ -19,6 +19,7 @@ def generate_launch_description():
     descr_dir = get_package_share_directory('chitti_description')
     ekf_config = os.path.join(bringup_dir, 'config', 'ekf.yaml')
     navsat_config = os.path.join(bringup_dir, 'config', 'navsat_transform.yaml')
+    map_yaml_file = os.path.join(bringup_dir, 'maps', 'campus_map.yaml')
 
     ekf_node = Node(
         package='robot_localization', executable='ekf_node', name='ekf_filter_node',
@@ -37,16 +38,13 @@ def generate_launch_description():
         name='map_to_odom_static_tf',
         condition=IfCondition(LaunchConfiguration('is_simulation')),
         arguments=[
-            '--x', '81.84', '--y', '-500.94', '--z', '0', 
+            '--x', '0', '--y', '0', '--z', '0', 
             '--roll', '0', '--pitch', '0', '--yaw', '0.0', 
             '--frame-id', 'map', '--child-frame-id', 'odom'
         ]
     )
 
     return LaunchDescription([
-        ekf_node,
-        navsat_node,
-        map_to_odom_tf,
         DeclareLaunchArgument(
             'use_fake_sensors',
             default_value='true',
@@ -67,6 +65,10 @@ def generate_launch_description():
             default_value='true',
             description='Start RViz with navigation debug config',
         ),
+        SetParameter(name='use_sim_time', value=LaunchConfiguration('is_simulation')),
+        ekf_node,
+        navsat_node,
+        map_to_odom_tf,
         Node(
             package='chitti_navigation',
             executable='fake_sensors',
@@ -108,6 +110,43 @@ def generate_launch_description():
             parameters=[nav2_params_file]
         ),
         Node(
+            package='nav2_planner',
+            executable='planner_server',
+            name='planner_server',
+            condition=IfCondition(LaunchConfiguration('use_nav2_controller')),
+            output='screen',
+            parameters=[nav2_params_file]
+        ),
+        Node(
+            package='nav2_behaviors',
+            executable='behavior_server',
+            name='behavior_server',
+            condition=IfCondition(LaunchConfiguration('use_nav2_controller')),
+            output='screen',
+            parameters=[nav2_params_file]
+        ),
+        Node(
+            package='nav2_bt_navigator',
+            executable='bt_navigator',
+            name='bt_navigator',
+            condition=IfCondition(LaunchConfiguration('use_nav2_controller')),
+            output='screen',
+            parameters=[nav2_params_file]
+        ),
+        Node(
+            package='nav2_map_server',
+            executable='map_server',
+            name='map_server',
+            condition=IfCondition(LaunchConfiguration('use_nav2_controller')),
+            output='screen',
+            parameters=[{
+                'use_sim_time': LaunchConfiguration('is_simulation'),
+                'yaml_filename': map_yaml_file,
+                'topic_name': 'map',
+                'frame_id': 'map'
+            }]
+        ),
+        Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
             name='lifecycle_manager_navigation',
@@ -115,7 +154,13 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'autostart': True,
-                'node_names': ['controller_server'],
+                'node_names': [
+                    'map_server',
+                    'planner_server',
+                    'controller_server',
+                    'behavior_server',
+                    'bt_navigator'
+                ],
                 'bond_timeout': 60.0
             }]
         ),
