@@ -97,22 +97,62 @@ class OSRMPathNode(Node):
 
     def plan_and_publish(self, start_lat, start_lon, end_lat, end_lon):
         try:
-            start_node = ox.distance.nearest_nodes(self.routing_graph, start_lon, start_lat)
-            end_node = ox.distance.nearest_nodes(self.routing_graph, end_lon, end_lat)
+            start_edge = ox.distance.nearest_edges(self.routing_graph, start_lon, start_lat)
+            end_edge = ox.distance.nearest_edges(self.routing_graph, end_lon, end_lat)
+
+            # Route to the node of the edge that minimizes total distance
+            su, sv, _ = start_edge
+            eu, ev, _ = end_edge
+
+            best_route = None
+            min_len = float('inf')
+            
+            for s in (su, sv):
+                for e in (eu, ev):
+                    if s == e:
+                        if 0 < min_len:
+                            min_len = 0
+                            best_route = [s]
+                    else:
+                        try:
+                            r = nx.shortest_path(self.routing_graph, s, e, weight='length')
+                            l = sum(self.routing_graph[r[i]][r[i+1]][0].get('length', 0) for i in range(len(r)-1))
+                            if l < min_len:
+                                min_len = l
+                                best_route = list(r)
+                        except nx.NetworkXNoPath:
+                            continue
+
+            if not best_route:
+                raise nx.NetworkXNoPath
+
+            # Assure the route begins with the full start edge geometry for overshoot pruning
+            if len(best_route) > 1 and best_route[1] in (su, sv):
+                if best_route[1] == best_route[0]: # Prevent degenerate node loops
+                    other_s = su if best_route[0] == sv else sv
+                    best_route.insert(0, other_s)
+            else:
+                other_s = su if best_route[0] == sv else sv
+                if other_s != best_route[0]:
+                    best_route.insert(0, other_s)
+                    
+            # Assure the route ends with the full end edge geometry for overshoot pruning
+            if len(best_route) > 1 and best_route[-2] in (eu, ev):
+                pass
+            else:
+                other_e = eu if best_route[-1] == ev else ev
+                if other_e != best_route[-1]:
+                    best_route.append(other_e)
 
             self.get_logger().info(
                 f'Planning route start=({start_lat:.6f},{start_lon:.6f}) '
-                f'goal=({end_lat:.6f},{end_lon:.6f}) start_node={start_node} end_node={end_node}'
+                f'goal=({end_lat:.6f},{end_lon:.6f}) using edges'
             )
 
-            if start_node == end_node:
-                self.get_logger().warn('Start and end snapped to same graph node, publishing direct 2-point path')
-                path_msg = self.route_to_path_msg([], start_lat, start_lon, end_lat, end_lon)
-                self.path_pub.publish(path_msg)
-                return
+            if len(best_route) < 2:
+                best_route = [su, sv]
 
-            route = nx.shortest_path(self.routing_graph, start_node, end_node, weight='length')
-            path_msg = self.route_to_path_msg(route, start_lat, start_lon, end_lat, end_lon)
+            path_msg = self.route_to_path_msg(best_route, start_lat, start_lon, end_lat, end_lon)
             self.path_pub.publish(path_msg)
             
             # Publish visual markers for START and GOAL to debug RViz perception
@@ -183,30 +223,71 @@ class OSRMPathNode(Node):
             pose.pose.orientation.w = 1.0
             return pose
 
-        # Add the exact start position
-        path_msg.poses.append(create_pose(start_lat, start_lon))
+        raw_poses = []
+        if route:
+            raw_poses.append(create_pose(self.graph.nodes[route[0]]['y'], self.graph.nodes[route[0]]['x']))
+            
+        first_edge_end_idx = 0
+        last_edge_start_idx = 0
 
         for i in range(len(route) - 1):
+            if i == len(route) - 2:
+                last_edge_start_idx = len(raw_poses) - 1
+
             u = route[i]
             v = route[i+1]
-            node_u = self.graph.nodes[u]
-            path_msg.poses.append(create_pose(node_u['y'], node_u['x']))
-            
             # Follow edge geometry precisely to avoid cutting through buildings/grass
             edge_data = self.graph.get_edge_data(u, v, 0)
             if edge_data and 'geometry' in edge_data:
                 coords = list(edge_data['geometry'].coords)
                 # Skip first and last as they are the node centres
                 for lon, lat in coords[1:-1]:
-                    path_msg.poses.append(create_pose(lat, lon))
-        
-        # Add the final road node
-        if route:
-            end_node = self.graph.nodes[route[-1]]
-            path_msg.poses.append(create_pose(end_node['y'], end_node['x']))
+                    raw_poses.append(create_pose(lat, lon))
+            
+            raw_poses.append(create_pose(self.graph.nodes[v]['y'], self.graph.nodes[v]['x']))
+            
+            if i == 0:
+                first_edge_end_idx = len(raw_poses) - 1
 
-        # Add the exact end position
-        path_msg.poses.append(create_pose(end_lat, end_lon))
+        start_pose = create_pose(start_lat, start_lon)
+        end_pose = create_pose(end_lat, end_lon)
+
+        # If raw_poses is empty (start node == end node), just use direct line
+        if not raw_poses:
+            path_msg.poses = [start_pose, end_pose]
+        else:
+            # Only prune the overshoot on the FIRST road segment
+            min_dist_start = float('inf')
+            closest_start_idx = 0
+            if first_edge_end_idx == 0: first_edge_end_idx = len(raw_poses) - 1
+            for i in range(first_edge_end_idx + 1):
+                p = raw_poses[i]
+                d = math.hypot(p.pose.position.x - start_pose.pose.position.x, 
+                               p.pose.position.y - start_pose.pose.position.y)
+                if d < min_dist_start:
+                    min_dist_start = d
+                    closest_start_idx = i
+
+            # Only prune the overshoot on the LAST road segment
+            min_dist_end = float('inf')
+            closest_end_idx = len(raw_poses) - 1
+            if last_edge_start_idx == 0: last_edge_start_idx = 0
+            for i in range(last_edge_start_idx, len(raw_poses)):
+                p = raw_poses[i]
+                d = math.hypot(p.pose.position.x - end_pose.pose.position.x, 
+                               p.pose.position.y - end_pose.pose.position.y)
+                if d < min_dist_end:
+                    min_dist_end = d
+                    closest_end_idx = i
+                    
+            if closest_start_idx <= closest_end_idx:
+                path_msg.poses = raw_poses[closest_start_idx : closest_end_idx + 1]
+            else:
+                path_msg.poses = raw_poses
+                
+            # Prepend exact start and append exact end
+            path_msg.poses.insert(0, start_pose)
+            path_msg.poses.append(end_pose)
 
         # Calculate yaw and orientation for each pose to make RViz arrows point correctly
         for i in range(len(path_msg.poses) - 1):
