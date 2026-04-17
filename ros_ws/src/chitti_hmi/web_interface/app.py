@@ -30,23 +30,23 @@ CORS(app)
 
 
 DESTINATION_OPTIONS = {
-    'academic_block_7': {'name': 'Academic Block 7', 'lat': 23.213469928819848, 'lon': 72.68494299968211},
-    'library': {'name': 'Central Library', 'lat': 23.213757307719888, 'lon': 72.68660191428987},
-    'cafeteria': {'name': '2 Degree Cafeteria', 'lat': 23.215266326943404, 'lon': 72.68482837805902},
-    'duven': {'name': 'Duven Hostel', 'lat': 23.21067670013383, 'lon': 72.68525797309472},
-    'jasubhai': {'name': 'Main Auditorium (Jasubhai)', 'lat': 23.21432714183521, 'lon': 72.68577801467315},
+    'academic_block_7': {'name': 'Academic Block 7', 'lat': 23.213911122480645, 'lon': 72.68500570339303},
+    'library': {'name': 'Central Library', 'lat': 23.214198501380685, 'lon': 72.68666461800079},
+    'cafeteria': {'name': '2 Degree Cafeteria', 'lat': 23.2157075206042, 'lon': 72.68489108176994},
+    'duven': {'name': 'Duven Hostel', 'lat': 23.211117893794628, 'lon': 72.68532067680564},
+    'jasubhai': {'name': 'Main Auditorium (Jasubhai)', 'lat': 23.214768335496007, 'lon': 72.68584071838407},
 }
 
 MAP_BOUNDS = {
-    'lat_min': 23.2100,
-    'lat_max': 23.2163,
-    'lon_min': 72.6837,
-    'lon_max': 72.6872,
+    'lat_min': 23.210441193660797,
+    'lat_max': 23.216741193660797,
+    'lon_min': 72.68376270371092,
+    'lon_max': 72.68726270371092,
 }
 
 MAP_CONFIG = {
-    'center_lat': 23.2114,
-    'center_lon': 72.6842,
+    'center_lat': 23.213911122480645,
+    'center_lon': 72.68500570339303,
     'min_zoom': 15,
     'max_zoom': 19,
 }
@@ -92,6 +92,7 @@ class HMIRosBridge(Node):
         self.latest_path_latlon = []
         self.robot_history = []
 
+        # Keep datum aligned with navigation nodes that publish /global_path in map frame.
         self.datum_lat = 23.2164
         self.datum_lon = 72.6836
         self.max_linear_speed = 0.45
@@ -175,8 +176,8 @@ class HMIRosBridge(Node):
         else:
             # Use campus center as simulated robot start when no live fix exists.
             self.initial_distance_m = haversine_meters(
-                23.2114,
-                72.6842,
+                23.213911122480645,
+                72.68500570339303,
                 self.active_goal['lat'],
                 self.active_goal['lon'],
             )

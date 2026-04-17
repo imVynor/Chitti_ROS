@@ -8,11 +8,8 @@ from nav_msgs.msg import Odometry, Path
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
-import pyproj
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
-from ament_index_python.packages import get_package_share_directory
-import os
 
 
 class OSRMPathNode(Node):
@@ -20,8 +17,8 @@ class OSRMPathNode(Node):
     def __init__(self):
         super().__init__('osrm_path_node')
 
-        self.default_lat = 23.210142
-        self.default_lon = 72.688199
+        self.default_lat = 23.213911122480645
+        self.default_lon = 72.68500570339303
         self.current_lat = self.default_lat
         self.current_lon = self.default_lon
         self.graph = None
@@ -36,29 +33,20 @@ class OSRMPathNode(Node):
         self.odom_sub = self.create_subscription(Odometry, '/odometry/filtered', self.odom_callback, 10)
         self.fix_sub = self.create_subscription(NavSatFix, '/fix', self.fix_callback, 10)
 
-        # Map Origin in UTM Zone 43N (EPSG:32643)
-        # These correspond to the campus graph center (23.210142, 72.688199)
-        self.MAP_ORIGIN_X = 263406.88
-        self.MAP_ORIGIN_Y = 2568664.52
-        
-        # Transformer for WGS84 to UTM 43N
-        self.transformer = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:32643", always_xy=True)
-        self.reverse_transformer = pyproj.Transformer.from_crs("EPSG:32643", "EPSG:4326", always_xy=True)
-
         self.get_logger().info('Loading IIT Gandhinagar campus map...')
         self.load_campus_map()
         self.get_logger().info('Map loaded. Send /goal_gps to plan routes.')
 
     def load_campus_map(self):
         try:
-            maps_path = os.path.join(
-                get_package_share_directory("chitti_navigation"),
-                "maps",
-                "iitg.graphml"
+            ox.settings.max_query_area_size = 50_000_000
+            self.graph = ox.graph_from_point(
+                center_point=(23.2114, 72.6842),
+                dist=2000,
+                network_type='all',
+                retain_all=False,
+                simplify=True,
             )
-            self.get_logger().info(f"Loading local IITGN map from {maps_path}...")
-            
-            self.graph = ox.load_graphml(maps_path)
             # Use an undirected view for shortest-path routing so one-way tagging
             # does not block valid campus traversal in this local planner.
             self.routing_graph = self.graph.to_undirected(as_view=False)
@@ -75,20 +63,20 @@ class OSRMPathNode(Node):
         self.current_lon = msg.longitude
 
     def odom_callback(self, msg):
-        if msg.header.frame_id not in ['map', 'odom']:
-            # Ignore odometry if it is not in the map or odom frame
+        if msg.header.frame_id != 'map':
+            # Ignore odometry if it is not in the map frame (e.g., odom frame)
             # We will rely on /fix instead for global position.
             return
 
+        datum_lat = 23.2164
+        datum_lon = 72.6836
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
 
-        # Convert Local Map frame to absolute UTM
-        easting = x + self.MAP_ORIGIN_X
-        northing = y + self.MAP_ORIGIN_Y
-        
-        # Convert UTM to Lat/Lon
-        self.current_lon, self.current_lat = self.reverse_transformer.transform(easting, northing)
+        self.current_lat = datum_lat + (y / 111320.0)
+        self.current_lon = datum_lon + (
+            x / (111320.0 * math.cos(math.radians(datum_lat)))
+        )
 
     def goal_callback(self, msg):
         if self.graph is None or self.routing_graph is None:
@@ -109,8 +97,8 @@ class OSRMPathNode(Node):
 
     def plan_and_publish(self, start_lat, start_lon, end_lat, end_lon):
         try:
-            start_node = ox.distance.nearest_nodes(self.graph, start_lon, start_lat)
-            end_node = ox.distance.nearest_nodes(self.graph, end_lon, end_lat)
+            start_node = ox.distance.nearest_nodes(self.routing_graph, start_lon, start_lat)
+            end_node = ox.distance.nearest_nodes(self.routing_graph, end_lon, end_lat)
 
             self.get_logger().info(
                 f'Planning route start=({start_lat:.6f},{start_lon:.6f}) '
@@ -176,18 +164,16 @@ class OSRMPathNode(Node):
             self.get_logger().error(f'Path planning failed: {exc}')
 
     def route_to_path_msg(self, route, start_lat, start_lon, end_lat, end_lon):
+        datum_lat = 23.2164
+        datum_lon = 72.6836
+
         path_msg = Path()
         path_msg.header.frame_id = 'map'
         path_msg.header.stamp = self.get_clock().now().to_msg()
         
         def create_pose(node_lat, node_lon):
-            # Convert Lat/Lon to absolute UTM
-            easting, northing = self.transformer.transform(node_lon, node_lat)
-            
-            # Convert absolute UTM to Local Map frame
-            x = easting - self.MAP_ORIGIN_X
-            y = northing - self.MAP_ORIGIN_Y
-            
+            x = (node_lon - datum_lon) * 111320.0 * math.cos(math.radians(datum_lat))
+            y = (node_lat - datum_lat) * 111320.0
             pose = PoseStamped()
             pose.header.frame_id = 'map'
             pose.header.stamp = self.get_clock().now().to_msg()
@@ -253,14 +239,11 @@ class OSRMPathNode(Node):
         marker.color.a = 0.3  # Translucent
         marker.color.r, marker.color.g, marker.color.b = 1.0, 1.0, 1.0 # White
 
+        datum_lat, datum_lon = 23.2164, 72.6836
+
         def get_point(n_lat, n_lon):
-            # Convert Lat/Lon to absolute UTM
-            easting, northing = self.transformer.transform(n_lon, n_lat)
-            
-            # Convert absolute UTM to Local Map frame
-            x = easting - self.MAP_ORIGIN_X
-            y = northing - self.MAP_ORIGIN_Y
-            
+            x = (n_lon - datum_lon) * 111320.0 * math.cos(math.radians(datum_lat))
+            y = (n_lat - datum_lat) * 111320.0
             p = Point()
             p.x, p.y, p.z = float(x), float(y), 0.0
             return p

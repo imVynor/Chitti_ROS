@@ -12,15 +12,15 @@ class DestinationManagerNode(Node):
 
         # Chitti location IDs mapped to GPS coordinates used by the friend planner.
         self.locations = {
-            'academic_block': {'name': 'Academic Block', 'lat': 23.2116, 'lon': 72.6839},
-            'academic_block_7': {'name': 'Academic Block 7', 'lat': 23.213469928819848, 'lon': 72.68494299968211},
-            'library': {'name': 'Central Library', 'lat': 23.2146, 'lon': 72.6863},
-            'cafeteria': {'name': 'Cafeteria', 'lat': 23.2109, 'lon': 72.6848},
-            'hostels': {'name': 'Student Hostels', 'lat': 23.2119, 'lon': 72.6844},
-            'duven': {'name': 'Duven Hostel', 'lat': 23.21067670013383, 'lon': 72.68525797309472},
-            'admin': {'name': 'Administration Block', 'lat': 23.2126, 'lon': 72.6843},
-            'auditorium': {'name': 'Main Auditorium', 'lat': 23.214361, 'lon': 72.685780},
-            'jasubhai': {'name': 'Main Auditorium (Jasubhai)', 'lat': 23.21432714183521, 'lon': 72.68577801467315},
+            'academic_block': {'name': 'Academic Block', 'lat': 23.212041193660797, 'lon': 72.68396270371093},
+            'academic_block_7': {'name': 'Academic Block 7', 'lat': 23.213911122480645, 'lon': 72.68500570339303},
+            'library': {'name': 'Central Library', 'lat': 23.214198501380685, 'lon': 72.68666461800079},
+            'cafeteria': {'name': 'Cafeteria', 'lat': 23.2113411936608, 'lon': 72.68486270371091},
+            'hostels': {'name': 'Student Hostels', 'lat': 23.212341193660798, 'lon': 72.68446270371092},
+            'duven': {'name': 'Duven Hostel', 'lat': 23.211117893794628, 'lon': 72.68532067680564},
+            'admin': {'name': 'Administration Block', 'lat': 23.213041193660797, 'lon': 72.68436270371092},
+            'auditorium': {'name': 'Main Auditorium', 'lat': 23.214802193660797, 'lon': 72.68584270371092},
+            'jasubhai': {'name': 'Main Auditorium (Jasubhai)', 'lat': 23.214768335496007, 'lon': 72.68584071838407},
         }
 
         self.location_pub = self.create_publisher(RobotLocation, '/robot/current_location', 10)

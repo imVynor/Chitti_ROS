@@ -4,50 +4,40 @@ from sensor_msgs.msg import Imu
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import NavSatStatus
 from nav_msgs.msg import Path
-from nav_msgs.msg import Odometry
-import pyproj
 import math
 
 class FakeImuOnly(Node):
     def __init__(self):
-        super().__init__('fake_sensors')
+        super().__init__('fake_sensors') # Kept the same node name so your setup.py still works
         
+        # Publish to 'imu/data' to match your project doc specifications
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10) 
         self.fix_pub = self.create_publisher(NavSatFix, '/fix', 10)
-        self.odom_sub = self.create_subscription(Odometry, '/diff_drive_controller/odom', self.odom_callback, 10)
+        self.path_sub = self.create_subscription(Path, '/global_path', self.path_callback, 10)
 
-        self.datum_lat = 23.210142
-        self.datum_lon = 72.688199
-
-        # Create UTM transformers (same logic as OSRM node)
-        self.transformer_to_utm = pyproj.Transformer.from_crs("epsg:4326", "epsg:32643", always_xy=True)
-        self.transformer_to_latlon = pyproj.Transformer.from_crs("epsg:32643", "epsg:4326", always_xy=True)
-
-        # Pre-calculate UTM coordinates of the datum
-        self.datum_x, self.datum_y = self.transformer_to_utm.transform(self.datum_lon, self.datum_lat)
-
-        self.current_lat = self.datum_lat
-        self.current_lon = self.datum_lon
-        self.current_orientation = None
-
+        # Use a stable campus center fix as fallback localization in simulation.
+        self.default_lat = 23.213911122480645
+        self.default_lon = 72.68500570339303
+        self.datum_lat = 23.2164
+        self.datum_lon = 72.6836
+        self.path_points = []
+        self.path_index = 0
         self.timer = self.create_timer(0.1, self.timer_callback) # 10 Hz
-        self.get_logger().info("Publishing fake IMU + GPS fix data synced to Gazebo Odometry at 10Hz...")
+        self.get_logger().info("Publishing fake IMU + GPS fix data at 10Hz...")
 
-    def odom_callback(self, msg):
-        # Convert Gazebo X/Y into simulated geographical coordinates using UTM projection
-        x = msg.pose.pose.position.x
-        y = msg.pose.pose.position.y
+    def path_callback(self, msg):
+        points = []
+        for pose in msg.poses:
+            x = float(pose.pose.position.x)
+            y = float(pose.pose.position.y)
+            lat = self.datum_lat + (y / 111320.0)
+            lon = self.datum_lon + (x / (111320.0 * math.cos(math.radians(self.datum_lat))))
+            points.append((lat, lon))
 
-        # Add Gazebo offset to UTM datum
-        utm_x = self.datum_x + x
-        utm_y = self.datum_y + y
-
-        # Convert back to lat/lon
-        lon, lat = self.transformer_to_latlon.transform(utm_x, utm_y)
-        
-        self.current_lat = lat
-        self.current_lon = lon
-        self.current_orientation = msg.pose.pose.orientation
+        if points:
+            self.path_points = points
+            self.path_index = 0
+            self.get_logger().info(f'Received /global_path for fake movement with {len(points)} points')
 
     def timer_callback(self):
         now = self.get_clock().now().to_msg()
@@ -56,21 +46,23 @@ class FakeImuOnly(Node):
         imu_msg = Imu()
         imu_msg.header.stamp = now
         imu_msg.header.frame_id = 'imu_link'
-        if self.current_orientation:
-            imu_msg.orientation = self.current_orientation
-        else:
-            imu_msg.orientation.w = 1.0 # Neutral orientation
+        imu_msg.orientation.w = 1.0 # Neutral orientation
         self.imu_pub.publish(imu_msg)
 
-        # Publish Fake GPS
         fix_msg = NavSatFix()
         fix_msg.header.stamp = now
         fix_msg.header.frame_id = 'gps_link'
         fix_msg.status.status = NavSatStatus.STATUS_FIX
         fix_msg.status.service = NavSatStatus.SERVICE_GPS
-        
-        fix_msg.latitude = float(self.current_lat)
-        fix_msg.longitude = float(self.current_lon)
+        if self.path_points:
+            lat, lon = self.path_points[self.path_index]
+            if self.path_index < len(self.path_points) - 1:
+                self.path_index += 1
+        else:
+            lat, lon = self.default_lat, self.default_lon
+
+        fix_msg.latitude = float(lat)
+        fix_msg.longitude = float(lon)
         fix_msg.altitude = 0.0
         fix_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_UNKNOWN
         self.fix_pub.publish(fix_msg)

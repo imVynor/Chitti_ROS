@@ -1,7 +1,7 @@
 locations:
   academic_block_7:
     name: "Academic Block 7"
-    coordinates: [23.213469928819848, 72.68494299968211, 0.0]
+    coordinates: [23.213911122480645, 72.68500570339303, 0.0]
     description: "Main academic building with classrooms and faculty offices"
     accessibility:
       wheelchair_accessible: true
@@ -11,7 +11,7 @@ locations:
 
   library:
     name: "Central Library"
-    coordinates: [23.213757307719888, 72.68660191428987, 0.0]
+    coordinates: [23.214198501380685, 72.68666461800079, 0.0]
     description: "24/7 central library with study areas and digital resources"
     accessibility:
       wheelchair_accessible: true
@@ -21,7 +21,7 @@ locations:
 
   cafeteria:
     name: "2 degree"
-    coordinates: [23.215266326943404, 72.68482837805902, 0.0]
+    coordinates: [23.2157075206042, 72.68489108176994, 0.0]
     description: "Student dining area with multiple food options"
     accessibility:
       wheelchair_accessible: true
@@ -31,7 +31,7 @@ locations:
 
   duven:
     name: "Duven Hostel"
-    coordinates: [23.21067670013383, 72.68525797309472, 0.0]
+    coordinates: [23.211117893794628, 72.68532067680564, 0.0]
     description: "Residential area for students"
     accessibility:
       wheelchair_accessible: true
@@ -41,7 +41,7 @@ locations:
 
   Jasubhai:
     name: "Main Auditorium (Jasubhai)"
-    coordinates: [23.21432714183521, 72.68577801467315, 0.0]
+    coordinates: [23.214768335496007, 72.68584071838407, 0.0]
     description: "Large venue for events and presentations"
     accessibility:
       wheelchair_accessible: true
