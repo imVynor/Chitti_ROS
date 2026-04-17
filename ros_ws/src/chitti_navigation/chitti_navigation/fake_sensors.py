@@ -63,7 +63,7 @@ class FakeImuOnly(Node):
 
         fix_msg.latitude = float(lat)
         fix_msg.longitude = float(lon)
-        fix_msg.altitude = 0.0
+        fix_msg.altitude = 81.0
         fix_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_UNKNOWN
         self.fix_pub.publish(fix_msg)
 

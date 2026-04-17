@@ -93,8 +93,8 @@ class HMIRosBridge(Node):
         self.robot_history = []
 
         # Keep datum aligned with navigation nodes that publish /global_path in map frame.
-        self.datum_lat = 23.2164
-        self.datum_lon = 72.6836
+        self.datum_lat = 23.2139111
+        self.datum_lon = 72.6850057
         self.max_linear_speed = 0.45
         self.max_angular_speed = 1.8
         self.manual_override_until = 0.0

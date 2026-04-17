@@ -68,8 +68,8 @@ class OSRMPathNode(Node):
             # We will rely on /fix instead for global position.
             return
 
-        datum_lat = 23.2164
-        datum_lon = 72.6836
+        datum_lat = 23.2139111
+        datum_lon = 72.6850057
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
 
@@ -164,8 +164,8 @@ class OSRMPathNode(Node):
             self.get_logger().error(f'Path planning failed: {exc}')
 
     def route_to_path_msg(self, route, start_lat, start_lon, end_lat, end_lon):
-        datum_lat = 23.2164
-        datum_lon = 72.6836
+        datum_lat = 23.2139111
+        datum_lon = 72.6850057
 
         path_msg = Path()
         path_msg.header.frame_id = 'map'
@@ -239,7 +239,7 @@ class OSRMPathNode(Node):
         marker.color.a = 0.3  # Translucent
         marker.color.r, marker.color.g, marker.color.b = 1.0, 1.0, 1.0 # White
 
-        datum_lat, datum_lon = 23.2164, 72.6836
+        datum_lat, datum_lon = 23.2139111, 72.6850057
 
         def get_point(n_lat, n_lon):
             x = (n_lon - datum_lon) * 111320.0 * math.cos(math.radians(datum_lat))
