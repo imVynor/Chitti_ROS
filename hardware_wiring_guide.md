@@ -1,6 +1,6 @@
 # Chitti Hardware Wiring & Connection Guide
 
-This document is your master checklist for physically building the robot. It covers connecting the Raspberry Pi to your Cytron MDD10A motor drivers, your NEO-6M GPS, your MPU9250 IMU, and ensuring the software matches the physical wires.
+This document is your master checklist for physically building the robot. It covers connecting the Raspberry Pi to your Cytron MDD3A motor drivers, your NEO-6M GPS, your MPU9250 IMU, and ensuring the software matches the physical wires.
 
 > [!CAUTION]
 > **Power Supply Rule #1:** NEVER power the motors directly from the Raspberry Pi. The Raspberry Pi must have its own 5V power source (like a power bank). The motors must run off a separate battery (like a 12V LiPo). 
@@ -8,23 +8,23 @@ This document is your master checklist for physically building the robot. It cov
 
 ---
 
-## 1. Motor Drivers (Cytron MDD10A)
+## 1. Motor Drivers (Cytron MDD3A)
 
-Since Chitti is a 4-wheel drive robot, and the MDD10A is a *dual-channel* driver (supports 2 motors), you will need **two MDD10A boards** to control all 4 wheels independently.
+Since Chitti is a 4-wheel drive robot, and the MDD3A is a *dual-channel* driver (supports 2 motors), you will need **two MDD3A boards** to control all 4 wheels independently.
 
-Each MDD10A channel requires 2 GPIO pins from the Pi: a **PWM pin** (Speed) and a **DIR pin** (Direction / Forward-Reverse).
+Each MDD3A channel requires 2 GPIO pins from the Pi: a **PWM pin** (Speed) and a **DIR pin** (Direction / Forward-Reverse).
 
 ### Recommended Wiring Map
 You can use any standard GPIO pins, but `pigpio` prefers pins that don't conflict with I2C/Serial. Here is the layout mapped in your software:
 
-*   **MDD10A Board 1 (Left Side)**
+*   **MDD3A Board 1 (Left Side)**
     *   **Front-Left Motor:**
         *   PWM: Pi GPIO `12`
         *   DIR: Pi GPIO `5`
     *   **Rear-Left Motor:**
         *   PWM: Pi GPIO `13`
         *   DIR: Pi GPIO `6`
-*   **MDD10A Board 2 (Right Side)**
+*   **MDD3A Board 2 (Right Side)**
     *   **Front-Right Motor:**
         *   PWM: Pi GPIO `18`
         *   DIR: Pi GPIO `16`
@@ -79,4 +79,4 @@ Before you run the master `robot.launch.py` on the physical Pi, check off these 
   ```bash
   colcon build --cmake-args -DUSE_PIGPIO=ON
   ```
-- [ ] **Elevated Blocks:** The first time you launch, **put the robot on a box so the wheels are not touching the ground!** Send a `/cmd_vel` twisting command and verify the wheels are spinning in the correct directions. If a wheel spins backward when it should go forward, simply flip the Motor A and Motor B wires plugged into the MDD10A green terminal block for that wheel.
+- [ ] **Elevated Blocks:** The first time you launch, **put the robot on a box so the wheels are not touching the ground!** Send a `/cmd_vel` twisting command and verify the wheels are spinning in the correct directions. If a wheel spins backward when it should go forward, simply flip the Motor A and Motor B wires plugged into the MDD3A green terminal block for that wheel.

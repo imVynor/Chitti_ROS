@@ -138,7 +138,7 @@
   </joint>
 
   <!-- ═══════════════════════════════════════
-       ROS2_CONTROL  –  Cytron MDD10A Hardware Interface
+       ROS2_CONTROL  –  Cytron MDD3A Hardware Interface
        GPIO pin numbers are PLACEHOLDERS – update to your wiring!
   ═══════════════════════════════════════ -->
   <ros2_control name="chitti_hardware" type="system">
