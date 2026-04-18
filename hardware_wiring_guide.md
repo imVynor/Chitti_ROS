@@ -8,32 +8,31 @@ This document is your master checklist for physically building the robot. It cov
 
 ---
 
-## 1. Motor Drivers (Cytron MDD3A)
+## 1. Motor Drivers (Offloaded to ESP32)
 
-Since Chitti is a 4-wheel drive robot, and the MDD3A is a *dual-channel* driver (supports 2 motors), you will need **two MDD3A boards** to control all 4 wheels independently.
+We are offloading all motor PWM generation from the Raspberry Pi to an external ESP32 microcontroller over a Serial connection. This frees up 8 Raspberry Pi GPIO pins!
 
-Each MDD3A channel requires 2 GPIO pins from the Pi: a **PWM pin** (Speed) and a **DIR pin** (Direction / Forward-Reverse).
+### 1a. Raspberry Pi -> ESP32 Data Connection
+You have two options to connect the Pi to the ESP32 to transmit the `L[pwm]R[pwm]\n` commands:
+**Option A (USB Cable):** Plug the ESP32 directly into the Raspberry Pi using a standard Micro-USB/USB-C cable. The Pi will recognize it as `/dev/ttyUSB1` (or similar). This is the easiest and most robust method.
+**Option B (Hardware UART):** Connect Pi **TX (GPIO 14)** to ESP32 **RX (Pin 16)**, and Pi **RX (GPIO 15)** to ESP32 **TX (Pin 17)**. Note: if your GPS is using these pins, you must use Option A!
 
-### Recommended Wiring Map
-You can use any standard GPIO pins, but `pigpio` prefers pins that don't conflict with I2C/Serial. Here is the layout mapped in your software:
+### 1b. ESP32 -> MDD3A Wiring Map
+The ESP32 runs our custom `esp32_firmware.ino` sketch which maps to these pins:
 
 *   **MDD3A Board 1 (Left Side)**
-    *   **Front-Left Motor:**
-        *   PWM: Pi GPIO `12`
-        *   DIR: Pi GPIO `5`
-    *   **Rear-Left Motor:**
-        *   PWM: Pi GPIO `13`
-        *   DIR: Pi GPIO `6`
+    *   **Front-Left Forward (A):** ESP32 Pin `26`
+    *   **Front-Left Backward (B):** ESP32 Pin `27`
+    *   **Rear-Left Forward (A):** ESP32 Pin `14`
+    *   **Rear-Left Backward (B):** ESP32 Pin `12`
 *   **MDD3A Board 2 (Right Side)**
-    *   **Front-Right Motor:**
-        *   PWM: Pi GPIO `18`
-        *   DIR: Pi GPIO `16`
-    *   **Rear-Right Motor:**
-        *   PWM: Pi GPIO `19`
-        *   DIR: Pi GPIO `20`
+    *   **Front-Right Forward (A):** ESP32 Pin `33`
+    *   **Front-Right Backward (B):** ESP32 Pin `32`
+    *   **Rear-Right Forward (A):** ESP32 Pin `25`
+    *   **Rear-Right Backward (B):** ESP32 Pin `4`
 
 > [!IMPORTANT]  
-> If you wire them differently, you must open `chitti.urdf.xacro` in your ROS workspace and change the `<param name="fl_pwm_pin">12</param>` numbers to match your real pins!
+> If you wire them differently, you must open `esp32_firmware.ino` and update the `#define` pin numbers!
 
 ---
 
