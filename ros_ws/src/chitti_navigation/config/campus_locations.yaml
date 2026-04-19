@@ -1,69 +1,130 @@
 locations:
-  academic_block_7:
-    name: "Academic Block 7"
-    coordinates: [23.213911122480645, 72.68500570339303, 0.0]
-    description: "Main academic building with classrooms and faculty offices"
+  library:
+    name: Central Library
+    coordinates:
+    - 23.213556
+    - 72.686485
+    - 0.0
+    description: Central Library
     accessibility:
       wheelchair_accessible: true
       elevator_available: true
       audio_guidance: true
     estimated_time_from_center: 5
-
-  library:
-    name: "Central Library"
-    coordinates: [23.214198501380685, 72.68666461800079, 0.0]
-    description: "24/7 central library with study areas and digital resources"
+  jibaben:
+    name: Jibaben
+    coordinates:
+    - 23.214793
+    - 72.685498
+    - 0.0
+    description: Jibaben
     accessibility:
       wheelchair_accessible: true
       elevator_available: true
       audio_guidance: true
-    estimated_time_from_center: 3
-
-  cafeteria:
-    name: "2 degree"
-    coordinates: [23.2157075206042, 72.68489108176994, 0.0]
-    description: "Student dining area with multiple food options"
+    estimated_time_from_center: 5
+  jasubhai:
+    name: Jasubhai
+    coordinates:
+    - 23.214685
+    - 72.685762
+    - 0.0
+    description: Jasubhai
     accessibility:
       wheelchair_accessible: true
-      elevator_available: false
+      elevator_available: true
       audio_guidance: true
-    estimated_time_from_center: 4
-
+    estimated_time_from_center: 5
   duven:
-    name: "Duven Hostel"
-    coordinates: [23.211117893794628, 72.68532067680564, 0.0]
-    description: "Residential area for students"
+    name: Duven Hostel
+    coordinates:
+    - 23.210695
+    - 72.685313
+    - 0.0
+    description: Duven Hostel
     accessibility:
       wheelchair_accessible: true
       elevator_available: true
       audio_guidance: true
-    estimated_time_from_center: 8
-
-  Jasubhai:
-    name: "Main Auditorium (Jasubhai)"
-    coordinates: [23.214768335496007, 72.68584071838407, 0.0]
-    description: "Large venue for events and presentations"
+    estimated_time_from_center: 5
+  sports_complex:
+    name: Sports Complex
+    coordinates:
+    - 23.211714
+    - 72.687882
+    - 0.0
+    description: Sports Complex
     accessibility:
       wheelchair_accessible: true
       elevator_available: true
       audio_guidance: true
-    estimated_time_from_center: 4
-
+    estimated_time_from_center: 5
+  guest_house:
+    name: Guest House
+    coordinates:
+    - 23.211416
+    - 72.689919
+    - 0.0
+    description: Guest House
+    accessibility:
+      wheelchair_accessible: true
+      elevator_available: true
+      audio_guidance: true
+    estimated_time_from_center: 5
+  jaiswal_mess:
+    name: Jaiswal Mess
+    coordinates:
+    - 23.210932
+    - 72.683778
+    - 0.0
+    description: Jaiswal Mess
+    accessibility:
+      wheelchair_accessible: true
+      elevator_available: true
+      audio_guidance: true
+    estimated_time_from_center: 5
+  new_pc:
+    name: New PC
+    coordinates:
+    - 23.209977
+    - 72.68441
+    - 0.0
+    description: New PC
+    accessibility:
+      wheelchair_accessible: true
+      elevator_available: true
+      audio_guidance: true
+    estimated_time_from_center: 5
+  rangmanch:
+    name: Rangmanch
+    coordinates:
+    - 23.216262
+    - 72.687482
+    - 0.0
+    description: Rangmanch
+    accessibility:
+      wheelchair_accessible: true
+      elevator_available: true
+      audio_guidance: true
+    estimated_time_from_center: 5
+  gate_1:
+    name: Gate 1
+    coordinates:
+    - 23.215753
+    - 72.693079
+    - 0.0
+    description: Gate 1
+    accessibility:
+      wheelchair_accessible: true
+      elevator_available: true
+      audio_guidance: true
+    estimated_time_from_center: 5
 quick_tours:
-  academic_tour:
-    name: "Academic Tour"
-    duration: 30
-    locations: ["academic_block_7", "library"]
-    description: "Visit key academic facilities"
-
   campus_highlights:
-    name: "Campus Highlights"
+    name: Campus Highlights
     duration: 45
-    locations: ["academic_block_7", "library", "cafeteria", "Jasubhai"]
-    description: "See the best of IIT Gandhinagar"
-
-  full_campus:
-    name: "Complete Campus Tour"
-    duration: 60
-    locations: ["academic_block_7", "library", "cafeteria", "duven", "Jasubhai"]
-    description: "Comprehensive tour of entire campus"
+    locations:
+    - library
+    - jasubhai
+    - sports_complex
+    description: See the best of IIT Gandhinagar

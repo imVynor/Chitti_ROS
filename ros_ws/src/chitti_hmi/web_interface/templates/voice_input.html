@@ -18,58 +18,74 @@
         <div class="content">
             <div class="status" id="status">Ready. Choose a destination.</div>
 
-            <section class="card">
-                <h2 class="section-title">Destinations</h2>
-                <div id="destinationOptions" class="options-grid"></div>
-            </section>
+            <!-- Tab: Nav -->
+            <div id="tab-nav" class="tab-content active-tab">
+                <section class="card">
+                    <h2 class="section-title">Destinations</h2>
+                    <div id="destinationOptions" class="options-grid"></div>
+                </section>
 
-            <section class="card">
-                <h2 class="section-title">IITGN Live Map</h2>
-                <div id="iitgnMap" class="map-touch-area"></div>
-                <div class="map-caption">Tap on campus roads/buildings to set destination</div>
-            </section>
+                <section class="card">
+                    <h2 class="section-title">IITGN Live Map</h2>
+                    <div id="iitgnMap" class="map-touch-area"></div>
+                    <div class="map-caption">Tap on campus roads/buildings to set destination</div>
+                </section>
 
-            <section class="card">
-                <h2 class="section-title">Distance</h2>
-                <div class="nav-metrics">
-                    <div class="metric"><span>Selected</span><strong id="selectedDestination">-</strong></div>
-                    <div class="metric"><span>Planned Distance</span><strong id="plannedDistance">-</strong></div>
-                    <div class="metric"><span>Remaining Distance</span><strong id="remainingDistance">-</strong></div>
-                    <div class="metric"><span>ETA</span><strong id="eta">-</strong></div>
-                </div>
-            </section>
-
-            <section class="card">
-                <h2 class="section-title">Manual Drive</h2>
-                <div class="manual-controls" id="manualControls">
-                    <button type="button" class="drive-btn" data-linear="0.30" data-angular="0.00">Forward</button>
-                    <div class="drive-row">
-                        <button type="button" class="drive-btn" data-linear="0.00" data-angular="0.95">Turn Left</button>
-                        <button type="button" class="drive-btn stop-btn" id="stopDriveButton">STOP</button>
-                        <button type="button" class="drive-btn" data-linear="0.00" data-angular="-0.95">Turn Right</button>
+                <section class="card">
+                    <h2 class="section-title">Distance</h2>
+                    <div class="nav-metrics">
+                        <div class="metric"><span>Selected</span><strong id="selectedDestination">-</strong></div>
+                        <div class="metric"><span>Planned Distance</span><strong id="plannedDistance">-</strong></div>
+                        <div class="metric"><span>Remaining Distance</span><strong id="remainingDistance">-</strong></div>
+                        <div class="metric"><span>ETA</span><strong id="eta">-</strong></div>
                     </div>
-                    <button type="button" class="drive-btn" data-linear="-0.25" data-angular="0.00">Reverse</button>
-                </div>
-                <div class="map-caption">Press and hold a direction. Release to stop.</div>
-            </section>
+                </section>
+            </div>
 
-            <section class="card">
-                <h2 class="section-title">Voice</h2>
-                <button id="recordButton" class="record-button" type="button">
-                    <span class="mic-icon" id="micLabel">Start Mic</span>
-                </button>
-
-                <div class="result-container">
-                    <div class="result-label">Last voice status</div>
-                    <div class="result" id="transcription">
-                        <p class="placeholder">Tap Start Mic, then tap Stop Mic to send.</p>
+            <!-- Tab: Drive -->
+            <div id="tab-drive" class="tab-content">
+                <section class="card">
+                    <h2 class="section-title">Manual Drive</h2>
+                    <div class="manual-controls" id="manualControls">
+                        <button type="button" class="drive-btn" data-linear="0.30" data-angular="0.00">Forward</button>
+                        <div class="drive-row">
+                            <button type="button" class="drive-btn" data-linear="0.00" data-angular="0.95">Turn Left</button>
+                            <button type="button" class="drive-btn stop-btn" id="stopDriveButton">STOP</button>
+                            <button type="button" class="drive-btn" data-linear="0.00" data-angular="-0.95">Turn Right</button>
+                        </div>
+                        <button type="button" class="drive-btn" data-linear="-0.25" data-angular="0.00">Reverse</button>
                     </div>
-                </div>
-            </section>
+                    <div class="map-caption">Press and hold a direction. Release to stop.</div>
+                </section>
+            </div>
+
+            <!-- Tab: Voice -->
+            <div id="tab-voice" class="tab-content">
+                <section class="card">
+                    <h2 class="section-title">Voice Command</h2>
+                    <button id="recordButton" class="record-button" type="button">
+                        <span class="mic-icon" id="micLabel">Start Mic</span>
+                    </button>
+
+                    <div class="result-container">
+                        <div class="result-label">Last voice status</div>
+                        <div class="result" id="transcription">
+                            <p class="placeholder">Tap Start Mic, then tap Stop Mic to send.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
 
             <div class="session-info">
                 <small id="sessionId">Session: Loading...</small>
             </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-btn active" data-target="tab-nav">📍 Nav</button>
+            <button class="nav-btn" data-target="tab-drive">🕹️ Drive</button>
+            <button class="nav-btn" data-target="tab-voice">🎤 Voice</button>
         </div>
     </div>
 

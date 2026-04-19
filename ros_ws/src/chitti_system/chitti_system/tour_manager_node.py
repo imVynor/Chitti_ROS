@@ -11,19 +11,14 @@ class TourManagerNode(Node):
         
         # Tour routes
         self.tour_routes = {
-            'academic_tour': {
-                'name': 'Academic Tour',
-                'locations': ['academic_block', 'library', 'admin'],
-                'duration': 30
-            },
             'campus_highlights': {
                 'name': 'Campus Highlights',
-                'locations': ['academic_block', 'library', 'cafeteria', 'auditorium'],
+                'locations': ['library', 'jasubhai', 'sports_complex', 'rangmanch'],
                 'duration': 45
             },
             'full_campus': {
                 'name': 'Complete Campus Tour',
-                'locations': ['academic_block', 'library', 'cafeteria', 'hostels', 'admin', 'auditorium'],
+                'locations': ['library', 'jibaben', 'jasubhai', 'duven', 'sports_complex', 'guest_house', 'rangmanch', 'gate_1'],
                 'duration': 60
             }
         }

@@ -12,12 +12,16 @@ class TourDialogueNode(Node):
         
         # Tour scripts
         self.tour_scripts = {
-            'academic_block': 'This is the IIT Gandhinagar Academic Block. It houses classrooms and faculty offices.',
-            'library': 'This is the Central Library, available 24/7 with study areas and digital resources.',
-            'cafeteria': 'Welcome to the Main Cafeteria with multiple food options for students.',
-            'hostels': 'These are the Student Hostels providing accommodation for students.',
-            'admin': 'This is the Administration Block with administrative offices.',
-            'auditorium': 'This is the Main Auditorium used for events and presentations.',
+            'library':        'This is the Central Library at IIT Gandhinagar, available 24/7 with study areas and digital resources.',
+            'jibaben':        'This is Jibaben, one of the key buildings on campus.',
+            'jasubhai':       'This is the Jasubhai Auditorium, the main venue for events and presentations.',
+            'duven':          'This is Duven Hostel, providing residential accommodation for students.',
+            'sports_complex': 'This is the Sports Complex, equipped with courts and facilities for various sports.',
+            'guest_house':    'This is the Guest House, for visiting faculty and guests of the institute.',
+            'jaiswal_mess':   'This is the Jaiswal Mess, one of the main student dining facilities.',
+            'new_pc':         'This is the New PC area on campus.',
+            'rangmanch':      'This is Rangmanch, the cultural activity centre of IIT Gandhinagar.',
+            'gate_1':         'This is Gate 1, the main entrance to the IIT Gandhinagar campus.',
         }
         
         # Subscribers

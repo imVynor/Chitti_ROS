@@ -16,12 +16,15 @@ class FakeImuOnly(Node):
         self.path_sub = self.create_subscription(Path, '/global_path', self.path_callback, 10)
 
         # Use a stable campus center fix as fallback localization in simulation.
-        self.default_lat = 23.213911122480645
-        self.default_lon = 72.68500570339303
-        self.datum_lat = 23.2164
-        self.datum_lon = 72.6836
+        self.default_lat = 23.213556
+        self.default_lon = 72.686485
+        self.datum_lat = 23.213556
+        self.datum_lon = 72.686485
         self.path_points = []
         self.path_index = 0
+        # Tracks the last GPS position published — used to find closest point on new paths.
+        self.current_lat = self.default_lat
+        self.current_lon = self.default_lon
         self.timer = self.create_timer(0.1, self.timer_callback) # 10 Hz
         self.get_logger().info("Publishing fake IMU + GPS fix data at 10Hz...")
 
@@ -36,17 +39,31 @@ class FakeImuOnly(Node):
 
         if points:
             self.path_points = points
-            self.path_index = 0
-            self.get_logger().info(f'Received /global_path for fake movement with {len(points)} points')
+            # Find the closest point in the new path to where we currently are.
+            # This prevents the robot from teleporting back to point 0 (start of new path)
+            # when the user changes destination mid-navigation.
+            min_dist = float('inf')
+            best_idx = 0
+            for i, (lat, lon) in enumerate(points):
+                dist = math.hypot(lat - self.current_lat, lon - self.current_lon)
+                if dist < min_dist:
+                    min_dist = dist
+                    best_idx = i
+            self.path_index = best_idx
+            self.get_logger().info(
+                f'New /global_path received ({len(points)} pts). '
+                f'Starting from closest index {best_idx} '
+                f'(current pos: {self.current_lat:.6f}, {self.current_lon:.6f})'
+            )
 
     def timer_callback(self):
         now = self.get_clock().now().to_msg()
-        
+
         # Publish Fake IMU
         imu_msg = Imu()
         imu_msg.header.stamp = now
         imu_msg.header.frame_id = 'imu_link'
-        imu_msg.orientation.w = 1.0 # Neutral orientation
+        imu_msg.orientation.w = 1.0
         self.imu_pub.publish(imu_msg)
 
         fix_msg = NavSatFix()
@@ -54,12 +71,33 @@ class FakeImuOnly(Node):
         fix_msg.header.frame_id = 'gps_link'
         fix_msg.status.status = NavSatStatus.STATUS_FIX
         fix_msg.status.service = NavSatStatus.SERVICE_GPS
-        if self.path_points:
+
+        if self.path_points and self.path_index < len(self.path_points):
             lat, lon = self.path_points[self.path_index]
-            if self.path_index < len(self.path_points) - 1:
+            
+            # Move slowly along the path (approx 1.0 m/s)
+            # timer_callback is 10Hz (0.1s), so we move 0.1 meters per tick.
+            # We skip points until we've moved roughly that distance.
+            speed_mps = 1.0
+            dist_per_tick = speed_mps * 0.1 # 0.1 meters
+            
+            accumulated_dist = 0.0
+            while self.path_index < len(self.path_points) - 1:
+                p1 = self.path_points[self.path_index]
+                p2 = self.path_points[self.path_index + 1]
+                # Rough distance in meters (approx 111320m per degree)
+                d = math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 111320.0
+                accumulated_dist += d
+                if accumulated_dist >= dist_per_tick:
+                    break
                 self.path_index += 1
         else:
-            lat, lon = self.default_lat, self.default_lon
+            # No active path or path finished — stay at last known position.
+            lat, lon = self.current_lat, self.current_lon
+
+        # Always keep track of where we currently "are" for path_callback to use.
+        self.current_lat = lat
+        self.current_lon = lon
 
         fix_msg.latitude = float(lat)
         fix_msg.longitude = float(lon)

@@ -30,24 +30,29 @@ CORS(app)
 
 
 DESTINATION_OPTIONS = {
-    'academic_block_7': {'name': 'Academic Block 7', 'lat': 23.213911122480645, 'lon': 72.68500570339303},
-    'library': {'name': 'Central Library', 'lat': 23.214198501380685, 'lon': 72.68666461800079},
-    'cafeteria': {'name': '2 Degree Cafeteria', 'lat': 23.2157075206042, 'lon': 72.68489108176994},
-    'duven': {'name': 'Duven Hostel', 'lat': 23.211117893794628, 'lon': 72.68532067680564},
-    'jasubhai': {'name': 'Main Auditorium (Jasubhai)', 'lat': 23.214768335496007, 'lon': 72.68584071838407},
+    'library': {'name': 'Central Library', 'lat': 23.213556, 'lon': 72.686485},
+    'jibaben': {'name': 'Jibaben', 'lat': 23.214793, 'lon': 72.685498},
+    'jasubhai': {'name': 'Jasubhai', 'lat': 23.214685, 'lon': 72.685762},
+    'duven': {'name': 'Duven Hostel', 'lat': 23.210695, 'lon': 72.685313},
+    'sports_complex': {'name': 'Sports Complex', 'lat': 23.211714, 'lon': 72.687882},
+    'guest_house': {'name': 'Guest House', 'lat': 23.211416, 'lon': 72.689919},
+    'jaiswal_mess': {'name': 'Jaiswal Mess', 'lat': 23.210932, 'lon': 72.683778},
+    'new_pc': {'name': 'New PC', 'lat': 23.209977, 'lon': 72.684410},
+    'rangmanch': {'name': 'Rangmanch', 'lat': 23.216262, 'lon': 72.687482},
+    'gate_1': {'name': 'Gate 1', 'lat': 23.215753, 'lon': 72.693079},
 }
 
 MAP_BOUNDS = {
-    'lat_min': 23.210441193660797,
-    'lat_max': 23.216741193660797,
-    'lon_min': 72.68376270371092,
-    'lon_max': 72.68726270371092,
+    'lat_min': 23.209000,
+    'lat_max': 23.217000,
+    'lon_min': 72.683000,
+    'lon_max': 72.694000,
 }
 
 MAP_CONFIG = {
-    'center_lat': 23.213911122480645,
-    'center_lon': 72.68500570339303,
-    'min_zoom': 15,
+    'center_lat': 23.213000,
+    'center_lon': 72.688500,
+    'min_zoom': 14,
     'max_zoom': 19,
 }
 
@@ -93,8 +98,8 @@ class HMIRosBridge(Node):
         self.robot_history = []
 
         # Keep datum aligned with navigation nodes that publish /global_path in map frame.
-        self.datum_lat = 23.2139111
-        self.datum_lon = 72.6850057
+        self.datum_lat = 23.213556
+        self.datum_lon = 72.686485
         self.max_linear_speed = 0.45
         self.max_angular_speed = 1.8
         self.manual_override_until = 0.0
@@ -176,8 +181,8 @@ class HMIRosBridge(Node):
         else:
             # Use campus center as simulated robot start when no live fix exists.
             self.initial_distance_m = haversine_meters(
-                23.213911122480645,
-                72.68500570339303,
+                23.213556,
+                72.686485,
                 self.active_goal['lat'],
                 self.active_goal['lon'],
             )

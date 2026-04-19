@@ -12,15 +12,16 @@ class DestinationManagerNode(Node):
 
         # Chitti location IDs mapped to GPS coordinates used by the friend planner.
         self.locations = {
-            'academic_block': {'name': 'Academic Block', 'lat': 23.212041193660797, 'lon': 72.68396270371093},
-            'academic_block_7': {'name': 'Academic Block 7', 'lat': 23.213911122480645, 'lon': 72.68500570339303},
-            'library': {'name': 'Central Library', 'lat': 23.214198501380685, 'lon': 72.68666461800079},
-            'cafeteria': {'name': 'Cafeteria', 'lat': 23.2113411936608, 'lon': 72.68486270371091},
-            'hostels': {'name': 'Student Hostels', 'lat': 23.212341193660798, 'lon': 72.68446270371092},
-            'duven': {'name': 'Duven Hostel', 'lat': 23.211117893794628, 'lon': 72.68532067680564},
-            'admin': {'name': 'Administration Block', 'lat': 23.213041193660797, 'lon': 72.68436270371092},
-            'auditorium': {'name': 'Main Auditorium', 'lat': 23.214802193660797, 'lon': 72.68584270371092},
-            'jasubhai': {'name': 'Main Auditorium (Jasubhai)', 'lat': 23.214768335496007, 'lon': 72.68584071838407},
+            'library':        {'name': 'Central Library', 'lat': 23.213556, 'lon': 72.686485},
+            'jibaben':        {'name': 'Jibaben',         'lat': 23.214793, 'lon': 72.685498},
+            'jasubhai':       {'name': 'Jasubhai',         'lat': 23.214685, 'lon': 72.685762},
+            'duven':          {'name': 'Duven Hostel',     'lat': 23.210695, 'lon': 72.685313},
+            'sports_complex': {'name': 'Sports Complex',   'lat': 23.211714, 'lon': 72.687882},
+            'guest_house':    {'name': 'Guest House',      'lat': 23.211416, 'lon': 72.689919},
+            'jaiswal_mess':   {'name': 'Jaiswal Mess',     'lat': 23.210932, 'lon': 72.683778},
+            'new_pc':         {'name': 'New PC',            'lat': 23.209977, 'lon': 72.684410},
+            'rangmanch':      {'name': 'Rangmanch',         'lat': 23.216262, 'lon': 72.687482},
+            'gate_1':         {'name': 'Gate 1',            'lat': 23.215753, 'lon': 72.693079},
         }
 
         self.location_pub = self.create_publisher(RobotLocation, '/robot/current_location', 10)

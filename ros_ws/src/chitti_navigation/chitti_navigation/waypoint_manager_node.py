@@ -9,11 +9,9 @@ class WaypointManagerNode(Node):
     def __init__(self):
         super().__init__('waypoint_manager_node')
         
-        # Tour routes
         self.tour_routes = {
-            'academic_tour': ['academic_block', 'library', 'admin'],
-            'campus_highlights': ['academic_block', 'library', 'cafeteria', 'auditorium'],
-            'full_campus': ['academic_block', 'library', 'cafeteria', 'hostels', 'admin', 'auditorium'],
+            'campus_highlights': ['library', 'jasubhai', 'sports_complex', 'rangmanch'],
+            'full_campus': ['library', 'jibaben', 'jasubhai', 'duven', 'sports_complex', 'guest_house', 'rangmanch', 'gate_1'],
         }
         
         # Publishers

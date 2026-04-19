@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionId = urlParams.get('session_id') || 'unknown';
     document.getElementById('sessionId').textContent = `Session: ${sessionId.substring(0, 8)}...`;
 
+    setupTabs();
     setupVoiceButton();
     setupManualControls();
     loadDestinationOptions();
@@ -24,9 +25,32 @@ document.addEventListener('DOMContentLoaded', () => {
     statusPollTimer = setInterval(pollNavigationStatus, 300);
 });
 
+function setupTabs() {
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            navButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            tabContents.forEach(tab => tab.classList.remove('active-tab'));
+            const targetId = btn.getAttribute('data-target');
+            document.getElementById(targetId).classList.add('active-tab');
+
+            // Invalidate map size if map tab is shown
+            if (targetId === 'tab-nav' && map) {
+                setTimeout(() => { map.invalidateSize(); }, 50);
+            }
+        });
+    });
+}
+
 function setupVoiceButton() {
     const recordButton = document.getElementById('recordButton');
-    recordButton.addEventListener('pointerup', toggleRecording);
+    recordButton.addEventListener('click', toggleRecording);
 }
 
 function setupManualControls() {
@@ -36,25 +60,33 @@ function setupManualControls() {
     }
 
     controlsRoot.querySelectorAll('.drive-btn[data-linear]').forEach((button) => {
-        button.addEventListener('pointerdown', (event) => {
-            event.preventDefault();
-            const linear = Number(button.dataset.linear || '0');
-            const angular = Number(button.dataset.angular || '0');
-            beginDriveHold(button, linear, angular);
+        ['pointerdown', 'touchstart', 'mousedown'].forEach(evt => {
+            button.addEventListener(evt, (event) => {
+                if(event.type === 'touchstart') {
+                    event.preventDefault(); // prevent mouse emulation
+                }
+                const linear = Number(button.dataset.linear || '0');
+                const angular = Number(button.dataset.angular || '0');
+                beginDriveHold(button, linear, angular);
+            });
         });
     });
 
     const stopButton = document.getElementById('stopDriveButton');
     if (stopButton) {
-        stopButton.addEventListener('pointerup', async (event) => {
-            event.preventDefault();
-            endDriveHold();
-            await sendStopCommand();
-            updateStatus('Drive stop command sent.');
+        ['pointerup', 'touchend', 'mouseup'].forEach(evt => {
+            stopButton.addEventListener(evt, async (event) => {
+                if(event.type === 'touchend') {
+                    event.preventDefault();
+                }
+                endDriveHold();
+                await sendStopCommand();
+                updateStatus('Drive stop command sent.');
+            });
         });
     }
 
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach((eventName) => {
+    ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'touchcancel', 'mouseup', 'mouseleave'].forEach((eventName) => {
         controlsRoot.addEventListener(eventName, endDriveHold);
     });
 }
@@ -183,7 +215,7 @@ async function loadDestinationOptions() {
             button.type = 'button';
             button.className = 'option-btn';
             button.textContent = option.name;
-            button.addEventListener('pointerup', async (event) => {
+            button.addEventListener('click', async (event) => {
                 event.preventDefault();
                 updateStatus(`Planning route to ${option.name}...`);
                 const result = await postJson('/api/navigation/select-option', { location_id: option.id });
