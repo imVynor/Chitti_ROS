@@ -17,8 +17,8 @@ class OSRMPathNode(Node):
     def __init__(self):
         super().__init__('osrm_path_node')
 
-        self.default_lat = 23.213911122480645
-        self.default_lon = 72.68500570339303
+        self.default_lat = 23.213556
+        self.default_lon = 72.686485
         self.current_lat = self.default_lat
         self.current_lon = self.default_lon
         self.graph = None
@@ -63,20 +63,23 @@ class OSRMPathNode(Node):
         self.current_lon = msg.longitude
 
     def odom_callback(self, msg):
-        if msg.header.frame_id != 'map':
-            # Ignore odometry if it is not in the map frame (e.g., odom frame)
-            # We will rely on /fix instead for global position.
-            return
-
-        datum_lat = 23.2139111
-        datum_lon = 72.6850057
-        x = msg.pose.pose.position.x
-        y = msg.pose.pose.position.y
-
-        self.current_lat = datum_lat + (y / 111320.0)
-        self.current_lon = datum_lon + (
-            x / (111320.0 * math.cos(math.radians(datum_lat)))
-        )
+        # We rely only on /fix (GPS) for global position in this simulation to avoid
+        # drift issues caused by navsat_transform orientation/IMU alignment.
+        return
+        # if msg.header.frame_id != 'map':
+        #     # Ignore odometry if it is not in the map frame (e.g., odom frame)
+        #     # We will rely on /fix instead for global position.
+        #     return
+        #
+        # datum_lat = 23.213556
+        # datum_lon = 72.686485
+        # x = msg.pose.pose.position.x
+        # y = msg.pose.pose.position.y
+        #
+        # self.current_lat = datum_lat + (y / 111320.0)
+        # self.current_lon = datum_lon + (
+        #     x / (111320.0 * math.cos(math.radians(datum_lat)))
+        # )
 
     def goal_callback(self, msg):
         if self.graph is None or self.routing_graph is None:
@@ -204,8 +207,8 @@ class OSRMPathNode(Node):
             self.get_logger().error(f'Path planning failed: {exc}')
 
     def route_to_path_msg(self, route, start_lat, start_lon, end_lat, end_lon):
-        datum_lat = 23.2139111
-        datum_lon = 72.6850057
+        datum_lat = 23.213556
+        datum_lon = 72.686485
 
         path_msg = Path()
         path_msg.header.frame_id = 'map'
@@ -320,7 +323,7 @@ class OSRMPathNode(Node):
         marker.color.a = 0.3  # Translucent
         marker.color.r, marker.color.g, marker.color.b = 1.0, 1.0, 1.0 # White
 
-        datum_lat, datum_lon = 23.2139111, 72.6850057
+        datum_lat, datum_lon = 23.213556, 72.686485
 
         def get_point(n_lat, n_lon):
             x = (n_lon - datum_lon) * 111320.0 * math.cos(math.radians(datum_lat))

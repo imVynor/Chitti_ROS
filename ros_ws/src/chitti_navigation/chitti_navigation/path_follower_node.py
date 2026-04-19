@@ -14,6 +14,11 @@ class PathFollowerNode(Node):
         super().__init__('path_follower_node')
         self._action_client = ActionClient(self, FollowPath, 'follow_path')
         self.path_sub = self.create_subscription(Path, '/global_path', self.path_callback, 10)
+
+        self._current_goal_handle = None
+        self._latest_path = None   # Always holds the most recently requested path
+        self._send_timer = None    # One-shot timer used after cancel delay
+
         self.get_logger().info('PathFollowerNode started and waiting for /global_path')
 
     def get_quaternion_from_yaw(self, yaw):
@@ -57,27 +62,74 @@ class PathFollowerNode(Node):
         return dense_path
 
     def path_callback(self, msg):
-        self.get_logger().info(f'Received sparse path with {len(msg.poses)} poses')
+        self.get_logger().info(f'Received new /global_path with {len(msg.poses)} poses')
+
+        # Always remember the newest path — this is the destination we want.
+        self._latest_path = msg
+
+        # If a timer from a previous mid-flight cancel is pending, kill it.
+        if self._send_timer is not None:
+            self._send_timer.cancel()
+            self._send_timer = None
+
+        if self._current_goal_handle is not None:
+            # Fire-and-forget cancel. We don't wait for the result because the callback
+            # chain was causing race conditions where the new path arrived with 0 poses.
+            # Instead we give Nav2 a fixed 400 ms to process the cancel before we send.
+            self.get_logger().info('Active goal found — cancelling and sending new path in 400 ms.')
+            self._current_goal_handle.cancel_goal_async()
+            self._current_goal_handle = None
+            self._send_timer = self.create_timer(0.4, self._on_send_timer)
+        else:
+            self._do_send_latest()
+
+    def _on_send_timer(self):
+        # Destroy the one-shot timer then send.
+        self._send_timer.cancel()
+        self._send_timer = None
+        self._do_send_latest()
+
+    def _do_send_latest(self):
+        if self._latest_path is None:
+            return
+
+        path = self._latest_path
+        self._latest_path = None  # Consume it so we don't send it twice.
 
         if not self._action_client.wait_for_server(timeout_sec=2.0):
             self.get_logger().error('Nav2 FollowPath action server not available')
             return
 
-        dense_path = self.interpolate_path(msg)
+        dense_path = self.interpolate_path(path)
+
+        if len(dense_path.poses) == 0:
+            self.get_logger().error('Interpolated path has 0 poses — skipping goal.')
+            return
+
         goal_msg = FollowPath.Goal()
         goal_msg.path = dense_path
         goal_msg.controller_id = 'FollowPath'
 
-        self.get_logger().info('Sending dense path to Nav2 FollowPath')
-        self._send_goal_future = self._action_client.send_goal_async(goal_msg)
-        self._send_goal_future.add_done_callback(self.goal_response_callback)
+        self.get_logger().info(f'Sending goal to Nav2 FollowPath ({len(dense_path.poses)} poses)')
+        send_future = self._action_client.send_goal_async(goal_msg)
+        send_future.add_done_callback(self._goal_response_callback)
 
-    def goal_response_callback(self, future):
+    def _goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
             self.get_logger().error('FollowPath goal rejected by Nav2')
+            self._current_goal_handle = None
             return
         self.get_logger().info('FollowPath goal accepted by Nav2')
+        self._current_goal_handle = goal_handle
+
+        # Watch for natural completion so we clear the handle when done.
+        result_future = goal_handle.get_result_async()
+        result_future.add_done_callback(self._on_goal_done)
+
+    def _on_goal_done(self, future):
+        self.get_logger().info('FollowPath goal completed or preempted.')
+        self._current_goal_handle = None
 
 
 def main(args=None):

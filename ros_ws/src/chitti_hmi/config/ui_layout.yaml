@@ -8,35 +8,55 @@ home_screen:
   subtitle: "Where would you like to go?"
   
   quick_locations:
-    - id: "academic_block"
-      name: "Academic Block"
-      icon: "school.png"
-      coordinates: [23.5937, 72.6837]
-    
     - id: "library"
       name: "Central Library"
       icon: "library.png"
-      coordinates: [23.5940, 72.6840]
-    
-    - id: "cafeteria"
-      name: "Cafeteria"
-      icon: "restaurant.png"
-      coordinates: [23.5935, 72.6835]
-    
-    - id: "hostels"
-      name: "Student Hostels"
-      icon: "home.png"
-      coordinates: [23.5945, 72.6845]
-    
-    - id: "admin"
-      name: "Administration"
-      icon: "admin.png"
-      coordinates: [23.5942, 72.6842]
-    
-    - id: "auditorium"
-      name: "Main Auditorium"
+      coordinates: [23.213556, 72.686485]
+
+    - id: "jibaben"
+      name: "Jibaben"
+      icon: "building.png"
+      coordinates: [23.214793, 72.685498]
+
+    - id: "jasubhai"
+      name: "Jasubhai"
       icon: "theater.png"
-      coordinates: [23.5938, 72.6838]
+      coordinates: [23.214685, 72.685762]
+
+    - id: "duven"
+      name: "Duven Hostel"
+      icon: "home.png"
+      coordinates: [23.210695, 72.685313]
+
+    - id: "sports_complex"
+      name: "Sports Complex"
+      icon: "sports.png"
+      coordinates: [23.211714, 72.687882]
+
+    - id: "guest_house"
+      name: "Guest House"
+      icon: "hotel.png"
+      coordinates: [23.211416, 72.689919]
+
+    - id: "jaiswal_mess"
+      name: "Jaiswal Mess"
+      icon: "restaurant.png"
+      coordinates: [23.210932, 72.683778]
+
+    - id: "new_pc"
+      name: "New PC"
+      icon: "building.png"
+      coordinates: [23.209977, 72.684410]
+
+    - id: "rangmanch"
+      name: "Rangmanch"
+      icon: "theater.png"
+      coordinates: [23.216262, 72.687482]
+
+    - id: "gate_1"
+      name: "Gate 1"
+      icon: "gate.png"
+      coordinates: [23.215753, 72.693079]
 
 accessibility_options:
   large_text: true

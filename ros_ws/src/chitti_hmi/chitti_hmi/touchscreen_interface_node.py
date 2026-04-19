@@ -45,7 +45,7 @@ class TouchscreenInterfaceNode(Node):
         """Publish current screen state"""
         msg = ScreenState()
         msg.current_screen = self.current_state.value
-        msg.available_options = ['academic_block', 'library', 'cafeteria', 'hostels', 'admin', 'auditorium']
+        msg.available_options = ['library', 'jibaben', 'jasubhai', 'duven', 'sports_complex', 'guest_house', 'jaiswal_mess', 'new_pc', 'rangmanch', 'gate_1']
         msg.mic_button_enabled = True
         msg.emergency_button_enabled = True
         msg.screen_brightness = float(self.get_parameter('brightness').value)
