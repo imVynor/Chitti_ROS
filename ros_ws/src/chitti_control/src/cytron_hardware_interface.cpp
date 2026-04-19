@@ -89,7 +89,7 @@ public:
     const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     if (serial_fd_ != -1) {
-      std::string stop_cmd = "L0R0\n";
+      std::string stop_cmd = "S";
       ::write(serial_fd_, stop_cmd.c_str(), stop_cmd.length());
       close(serial_fd_);
     }
@@ -143,12 +143,25 @@ public:
     const rclcpp::Duration & /*period*/) override
   {
     // hw_commands_[0] and [2] are left side. hw_commands_[1] and [3] are right side.
-    int left_pwm = rads_to_pwm(hw_commands_[0]);
-    int right_pwm = rads_to_pwm(hw_commands_[1]);
+    double left_vel = hw_commands_[0];
+    double right_vel = hw_commands_[1];
+    
+    char cmd = 'S';
+    double threshold = 0.5; // Trigger point in rad/s
+
+    if (left_vel > threshold && right_vel > threshold) {
+      cmd = 'F';
+    } else if (left_vel < -threshold && right_vel < -threshold) {
+      cmd = 'B';
+    } else if (left_vel < -threshold && right_vel > threshold) {
+      cmd = 'L';
+    } else if (left_vel > threshold && right_vel < -threshold) {
+      cmd = 'R';
+    }
 
     if (serial_fd_ != -1) {
-      std::string cmd = "L" + std::to_string(left_pwm) + "R" + std::to_string(right_pwm) + "\n";
-      ::write(serial_fd_, cmd.c_str(), cmd.length());
+      std::string cmd_str(1, cmd);
+      ::write(serial_fd_, cmd_str.c_str(), cmd_str.length());
     }
 
     return hardware_interface::return_type::OK;
