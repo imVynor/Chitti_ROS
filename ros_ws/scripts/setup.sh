@@ -106,9 +106,9 @@ if [[ $SKIP_VENV -eq 0 ]]; then
   # shellcheck disable=SC1091
   source .venv/bin/activate
   python -m pip install -U pip
-  python -m pip install pyttsx3 nltk
+  python -m pip install pyttsx3 nltk mpu9250-jmdev
   python - <<'PY'
-import pyttsx3, nltk
+import pyttsx3, nltk, mpu9250_jmdev
 print('python_deps_ok')
 PY
 fi

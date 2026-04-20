@@ -129,6 +129,7 @@ else
     chitti_bringup
     chitti_interaction
     chitti_hmi
+    mpu9250driver
   )
   echo "[INFO] Building core runtime packages for faster iteration"
   colcon build "${COLCON_ARGS[@]}" --packages-up-to "${CORE_PKGS[@]}"

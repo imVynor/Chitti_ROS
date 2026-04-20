@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    gps_port = LaunchConfiguration('gps_port')
     
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'gps_port',
+            default_value='/dev/ttyACM0',
+            description='Serial port for NMEA GPS (e.g. /dev/ttyACM0 or /dev/ttyUSB0)',
+        ),
         # ── GPS Driver (NEO-6M via UART) ──
         # Uses standard nmea_navsat_driver to capture NMEA strings from serial port
         Node(
@@ -15,7 +23,7 @@ def generate_launch_description():
             name='nmea_navsat_driver',
             output='screen',
             parameters=[{
-                'port': '/dev/ttyUSB0',  # Update to your actual Pi serial port
+                'port': gps_port,
                 'baud': 9600,
                 'frame_id': 'gps_link',
                 'use_rostime': True

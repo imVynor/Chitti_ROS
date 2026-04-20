@@ -17,6 +17,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     bringup_dir = get_package_share_directory('chitti_bringup')
+    gps_port = LaunchConfiguration('gps_port')
     
     is_sim_arg = DeclareLaunchArgument(
         'is_simulation',
@@ -25,10 +26,17 @@ def generate_launch_description():
     )
     is_sim = LaunchConfiguration('is_simulation')
 
+    gps_port_arg = DeclareLaunchArgument(
+        'gps_port',
+        default_value='/dev/ttyACM0',
+        description='Serial port for GPS device (for example /dev/ttyACM0 or /dev/ttyUSB0)'
+    )
+
     # ── 1. Launch Sensor Interfaces ──
     # Connects physical hardware pins to ROS topics
     sensors_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch', 'sensors.launch.py'))
+        PythonLaunchDescriptionSource(os.path.join(bringup_dir, 'launch', 'sensors.launch.py')),
+        launch_arguments={'gps_port': gps_port}.items()
     )
     
     # ── 2. Launch Motor Controllers & Robot State ──
@@ -50,6 +58,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         is_sim_arg,
+        gps_port_arg,
         # Start sensors instantly
         sensors_launch,
         # Boot hardware 2 seconds later to ensure clean state
