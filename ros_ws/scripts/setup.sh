@@ -13,6 +13,7 @@ Usage: bash scripts/setup.sh [options]
 One-time bootstrap for Raspberry Pi / cloud machine.
 
 Options:
+  --ros-distro NAME  ROS distro to use (default: $ROS_DISTRO or jazzy)
   --skip-rosdep   Skip rosdep update/install
   --skip-venv     Skip local Python venv setup
   -h, --help      Show this help
@@ -21,6 +22,14 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --ros-distro)
+      if [[ -z "${2:-}" ]]; then
+        echo "[ERROR] --ros-distro requires a value"
+        exit 2
+      fi
+      ROS_DISTRO_NAME="$2"
+      shift
+      ;;
     --skip-rosdep) SKIP_ROSDEP=1 ;;
     --skip-venv) SKIP_VENV=1 ;;
     -h|--help)
@@ -41,6 +50,21 @@ if [[ ! -f "/opt/ros/${ROS_DISTRO_NAME}/setup.bash" ]]; then
   exit 1
 fi
 
+if [[ ! -d "$WS_DIR/src" ]]; then
+  echo "[ERROR] Workspace source folder not found: $WS_DIR/src"
+  exit 1
+fi
+
+require_cmd() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "[ERROR] Required command not found: $cmd"
+    exit 1
+  fi
+}
+
+require_cmd python3
+
 set +u
 source "/opt/ros/${ROS_DISTRO_NAME}/setup.bash"
 set -u
@@ -51,6 +75,7 @@ echo "[INFO] Workspace: $WS_DIR"
 echo "[INFO] ROS_DISTRO: $ROS_DISTRO_NAME"
 
 if [[ $SKIP_ROSDEP -eq 0 ]]; then
+  require_cmd rosdep
   echo "[INFO] Installing system dependencies (rosdep)..."
   rosdep update --rosdistro "$ROS_DISTRO_NAME"
   rosdep install \
@@ -63,7 +88,15 @@ fi
 
 if [[ $SKIP_VENV -eq 0 ]]; then
   echo "[INFO] Ensuring python venv support..."
-  sudo -H apt-get install -y python3.12-venv python3-nltk
+  require_cmd sudo
+  require_cmd apt-get
+  PY_MM="$(python3 -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')"
+  VENV_PKG="python${PY_MM}-venv"
+  if apt-cache show "$VENV_PKG" >/dev/null 2>&1; then
+    sudo -H apt-get install -y "$VENV_PKG" python3-nltk
+  else
+    sudo -H apt-get install -y python3-venv python3-nltk
+  fi
 
   if [[ ! -d .venv ]]; then
     echo "[INFO] Creating local venv: .venv"
