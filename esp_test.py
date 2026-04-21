@@ -4,7 +4,7 @@ import time
 # Set up the serial connection
 # '/dev/serial0' points to the physical GPIO UART pins.
 # If you are using a USB cable instead, change this to '/dev/ttyUSB1' or '/dev/ttyUSB0'
-PORT = '/dev/serial0' 
+PORT = '/dev/ttyUSB1' 
 BAUD_RATE = 115200  # Updated to match the high-speed ROS 2 / ESP32 rate
 
 try:
