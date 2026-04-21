@@ -1,6 +1,5 @@
 controller_server:
   ros__parameters:
-    use_sim_time: true
     controller_frequency: 5.0
     min_x_velocity_threshold: 0.001
     enable_stamped_cmd_vel: true
@@ -53,7 +52,6 @@ local_costmap:
       publish_frequency: 2.0
       global_frame: odom
       robot_base_frame: base_footprint
-      use_sim_time: true
       rolling_window: true
       width: 5
       height: 5
@@ -82,7 +80,6 @@ local_costmap:
 planner_server:
   ros__parameters:
     expected_planner_frequency: 5.0
-    use_sim_time: true
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
@@ -97,7 +94,6 @@ global_costmap:
       publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_footprint
-      use_sim_time: true
       robot_radius: 0.22
       resolution: 1.0
       track_unknown_space: true
@@ -129,7 +125,6 @@ global_costmap:
 
 behavior_server:
   ros__parameters:
-    use_sim_time: true
     costmap_topic: local_costmap/costmap_raw
     footprint_topic: local_costmap/published_footprint
     cycle_frequency: 10.0
@@ -154,7 +149,6 @@ behavior_server:
 
 bt_navigator:
   ros__parameters:
-    use_sim_time: true
     global_frame: map
     robot_base_frame: base_footprint
     odom_frame: odom
@@ -166,5 +160,4 @@ bt_navigator:
 
 map_server:
   ros__parameters:
-    use_sim_time: true
     yaml_filename: "campus_map.yaml"

@@ -36,10 +36,9 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='map_to_odom_static_tf',
-        condition=IfCondition(LaunchConfiguration('is_simulation')),
         arguments=[
-            '--x', '0', '--y', '0', '--z', '0', 
-            '--roll', '0', '--pitch', '0', '--yaw', '0.0', 
+            '--x', '0', '--y', '0', '--z', '0',
+            '--roll', '0', '--pitch', '0', '--yaw', '0.0',
             '--frame-id', 'map', '--child-frame-id', 'odom'
         ]
     )
@@ -52,8 +51,8 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'is_simulation',
-            default_value='true',
-            description='Toggle static map->odom localization and robot description for standalone simulation',
+            default_value='false',
+            description='Toggle simulation-only sensor behavior and robot description',
         ),
         DeclareLaunchArgument(
             'use_nav2_controller',
@@ -140,7 +139,6 @@ def generate_launch_description():
             condition=IfCondition(LaunchConfiguration('use_nav2_controller')),
             output='screen',
             parameters=[{
-                'use_sim_time': LaunchConfiguration('is_simulation'),
                 'yaml_filename': map_yaml_file,
                 'topic_name': 'map',
                 'frame_id': 'map'

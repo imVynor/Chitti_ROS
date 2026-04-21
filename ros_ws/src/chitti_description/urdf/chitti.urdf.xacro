@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot name="chitti" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:arg name="use_sim" default="false"/>
+  <xacro:arg name="serial_port" default="/dev/ttyUSB1"/>
 
   <!-- ─────────────────────────────────────────
        DIMENSIONS  (all in metres)
@@ -149,7 +150,7 @@
       <xacro:unless value="$(arg use_sim)">
         <plugin>chitti_control/CytronHardwareInterface</plugin>
         <!-- Serial Connection to ESP32 MDD3A Bridge -->
-        <param name="serial_port">/dev/ttyUSB1</param>
+        <param name="serial_port">$(arg serial_port)</param>
         <!-- Wheel physical parameters -->
         <param name="wheel_radius">0.05</param>
         <param name="max_motor_rpm">200</param>

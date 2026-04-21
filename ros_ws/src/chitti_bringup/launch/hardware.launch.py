@@ -21,11 +21,18 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
 
     use_sim = LaunchConfiguration('use_sim')
+    motor_port = LaunchConfiguration('motor_port')
     
     use_sim_arg = DeclareLaunchArgument(
         'use_sim',
         default_value='false',
         description='Use simulation (Gazebo)'
+    )
+
+    motor_port_arg = DeclareLaunchArgument(
+        'motor_port',
+        default_value='/dev/ttyUSB1',
+        description='Serial port for ESP32 motor controller (for example /dev/ttyUSB1)',
     )
 
     # ── Paths ──
@@ -36,7 +43,16 @@ def generate_launch_description():
     controllers_yaml = os.path.join(control_pkg, 'config', 'controllers.yaml')
                        
     # ── Process xacro → URDF string ──
-    robot_description = {'robot_description': ParameterValue(Command(['xacro ', xacro_file, ' use_sim:=', use_sim]), value_type=str)}
+    robot_description = {
+        'robot_description': ParameterValue(
+            Command([
+                'xacro ', xacro_file,
+                ' use_sim:=', use_sim,
+                ' serial_port:=', motor_port,
+            ]),
+            value_type=str,
+        )
+    }
 
     # ── robot_state_publisher ──
     robot_state_publisher = Node(
@@ -95,6 +111,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         use_sim_arg,
+        motor_port_arg,
         SetParameter(name='use_sim_time', value=use_sim),
         robot_state_publisher,
         controller_manager,

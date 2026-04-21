@@ -26,6 +26,7 @@ def generate_launch_description():
     use_fake_sensors = LaunchConfiguration('use_fake_sensors')
     is_simulation = LaunchConfiguration('is_simulation')
     start_hardware_control = LaunchConfiguration('start_hardware_control')
+    motor_port = LaunchConfiguration('motor_port')
 
     web_server = ExecuteProcess(
         condition=IfCondition(start_web_interface),
@@ -63,7 +64,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(bringup_dir, 'launch', 'hardware.launch.py')
         ),
-        launch_arguments={'use_sim': start_gazebo_sim}.items(),
+        launch_arguments={'use_sim': start_gazebo_sim, 'motor_port': motor_port}.items(),
         condition=IfCondition(start_hardware_control),
     )
 
@@ -132,6 +133,11 @@ def generate_launch_description():
             'start_hardware_control',
             default_value='true',
             description='Bring up ros2_control motor controllers',
+        ),
+        DeclareLaunchArgument(
+            'motor_port',
+            default_value='/dev/ttyUSB1',
+            description='Serial port for ESP32 motor controller (for example /dev/ttyUSB1)',
         ),
 
         SetParameter('use_sim_time', start_gazebo_sim),
