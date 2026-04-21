@@ -4,7 +4,7 @@ import threading
 
 # Set up the serial connection
 # Remember to match this with how your ESP32 is plugged in!
-PORT = '/dev/ttyACM0' 
+PORT = '/dev/ttyUSB1' 
 BAUD_RATE = 115200 
 
 try:

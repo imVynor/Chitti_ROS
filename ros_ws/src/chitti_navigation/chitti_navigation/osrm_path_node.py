@@ -10,6 +10,8 @@ from geometry_msgs.msg import Point
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
+import tf2_ros
+from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
 
 
 class OSRMPathNode(Node):
@@ -32,6 +34,10 @@ class OSRMPathNode(Node):
         self.goal_sub = self.create_subscription(NavSatFix, '/goal_gps', self.goal_callback, 10)
         self.odom_sub = self.create_subscription(Odometry, '/odometry/filtered', self.odom_callback, 10)
         self.fix_sub = self.create_subscription(NavSatFix, '/fix', self.fix_callback, 10)
+
+        # TF2 listener to dynamically track exact robot position on the map
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
         self.get_logger().info('Loading IIT Gandhinagar campus map...')
         self.load_campus_map()
@@ -86,10 +92,28 @@ class OSRMPathNode(Node):
             self.get_logger().error('Map not loaded yet')
             return
 
-        if self.current_lat is None or self.current_lon is None:
-            self.get_logger().warn('Current position unavailable. Using default campus start position.')
-            self.current_lat = self.default_lat
-            self.current_lon = self.default_lon
+        # Attempt to dynamically reverse-engineer the robot's GPS based on its live TF!
+        try:
+            t = self.tf_buffer.lookup_transform(
+                'map', 
+                'base_footprint', 
+                rclpy.time.Time(), 
+                rclpy.duration.Duration(seconds=1.0)
+            )
+            
+            x = t.transform.translation.x
+            y = t.transform.translation.y
+            
+            # Exact reverse conversion using the map datum
+            self.current_lat = self.default_lat + (y / 111320.0)
+            self.current_lon = self.default_lon + (x / (111320.0 * math.cos(math.radians(self.default_lat))))
+            self.get_logger().info(f'Dynamic Start Generated via TF2: ({self.current_lat:.6f}, {self.current_lon:.6f})')
+        except (LookupException, ConnectivityException, ExtrapolationException) as e:
+            self.get_logger().warn(f'TF2 Map transform unavailable ({e}). Defaulting to raw GPS stream.')
+            if self.current_lat is None or self.current_lon is None:
+                self.get_logger().warn('Raw GPS stream is also empty! Falling back to static default starting point.')
+                self.current_lat = self.default_lat
+                self.current_lon = self.default_lon
 
         self.plan_and_publish(
             self.current_lat,
