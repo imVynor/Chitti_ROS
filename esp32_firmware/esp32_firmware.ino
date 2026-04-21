@@ -25,13 +25,8 @@ String inputString = "";
 bool stringComplete = false;
 
 void setup() {
-  // Serial to PC/Monitor for debugging
+  // Using USB cable for Raspberry Pi ROS 2
   Serial.begin(115200); 
-  
-  // Serial2 for Raspberry Pi ROS 2
-  // Using pins 16 (RX) and 17 (TX). 
-  // If connecting via USB cable instead of pins, change all 'Serial2' below to 'Serial'!
-  Serial2.begin(115200, SERIAL_8N1, 16, 17); 
   
   Serial.println("ESP32 Calibrated PWM Driver Ready.");
 
@@ -46,9 +41,9 @@ void setup() {
 }
 
 void loop() {
-  // Read Serial data from Raspberry Pi 
-  while (Serial2.available()) {
-    char inChar = (char)Serial2.read();
+  // Read Serial data from Raspberry Pi over USB 
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
     inputString += inChar;
     if (inChar == '\n') {
       stringComplete = true;
