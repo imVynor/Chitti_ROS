@@ -81,6 +81,7 @@ def generate_launch_description():
             '--controller-manager-timeout', '20',
         ],
         output='screen',
+        condition=UnlessCondition(use_sim),
     )
     
     spawn_joint_states = TimerAction(
@@ -100,6 +101,7 @@ def generate_launch_description():
             '--controller-manager-timeout', '20'
         ],
         output='screen',
+        condition=UnlessCondition(use_sim),
     )
     
     spawn_diff_drive = RegisterEventHandler(
