@@ -15,11 +15,11 @@ class FakeImuOnly(Node):
         self.fix_pub = self.create_publisher(NavSatFix, '/fix', 10)
         self.path_sub = self.create_subscription(Path, '/global_path', self.path_callback, 10)
 
-        # Use a stable campus center fix as fallback localization in simulation.
-        self.default_lat = 23.213556
-        self.default_lon = 72.686485
-        self.datum_lat = 23.213556
-        self.datum_lon = 72.686485
+        # Use AB 11 as the starting point for the fake GPS
+        self.default_lat = 23.2114
+        self.default_lon = 72.6821
+        self.datum_lat = 23.2114
+        self.datum_lon = 72.6821
         self.path_points = []
         self.path_index = 0
         # Tracks the last GPS position published — used to find closest point on new paths.

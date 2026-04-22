@@ -74,7 +74,7 @@ class HMIRosBridge(Node):
         super().__init__('hmi_web_bridge')
 
         vel_qos = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            reliability=QoSReliabilityPolicy.RELIABLE,
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=10,
         )

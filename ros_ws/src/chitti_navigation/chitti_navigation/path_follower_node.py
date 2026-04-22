@@ -45,10 +45,10 @@ class DirectPathFollower(Node):
         self.active = False        # are we currently following a path?
 
         # ── Publishers ──────────────────────────────────────────────
-        # CRITICAL: use BEST_EFFORT to match diff_drive_controller's QoS
+        # CRITICAL: use RELIABLE to match diff_drive_controller's expectation in Jazzy
         cmd_vel_qos = QoSProfile(
             depth=10,
-            reliability=ReliabilityPolicy.BEST_EFFORT,
+            reliability=ReliabilityPolicy.RELIABLE,
             durability=DurabilityPolicy.VOLATILE,
         )
         self.cmd_pub = self.create_publisher(
