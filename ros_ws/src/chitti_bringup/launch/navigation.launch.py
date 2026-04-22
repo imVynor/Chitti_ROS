@@ -124,14 +124,7 @@ def generate_launch_description():
             output='screen',
             parameters=[nav2_params_file]
         ),
-        Node(
-            package='nav2_bt_navigator',
-            executable='bt_navigator',
-            name='bt_navigator',
-            condition=IfCondition(LaunchConfiguration('use_nav2_controller')),
-            output='screen',
-            parameters=[nav2_params_file]
-        ),
+
         Node(
             package='nav2_map_server',
             executable='map_server',
@@ -156,8 +149,7 @@ def generate_launch_description():
                     'map_server',
                     'planner_server',
                     'controller_server',
-                    'behavior_server',
-                    'bt_navigator'
+                    'behavior_server'
                 ],
                 'bond_timeout': 60.0
             }]
