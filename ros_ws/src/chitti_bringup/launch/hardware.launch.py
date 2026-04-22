@@ -66,7 +66,7 @@ def generate_launch_description():
     controller_manager = Node(
         package='controller_manager',
         executable='ros2_control_node',
-        parameters=[controllers_yaml],
+        parameters=[robot_description, controllers_yaml],
         output='screen',
         condition=UnlessCondition(use_sim),
     )
