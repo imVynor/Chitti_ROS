@@ -106,7 +106,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'start_gazebo_sim',
-            default_value='true',
+            default_value='false',
             description='Start Gazebo (GZ) simulation with Chitti robot model',
         ),
         DeclareLaunchArgument(
@@ -121,12 +121,12 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'use_fake_sensors',
-            default_value='true',
+            default_value='false',
             description='Use simulated GPS/IMU messages',
         ),
         DeclareLaunchArgument(
             'is_simulation',
-            default_value='true',
+            default_value='false',
             description='Use static map to odom transform for simulation',
         ),
         DeclareLaunchArgument(
