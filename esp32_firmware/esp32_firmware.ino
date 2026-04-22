@@ -30,10 +30,23 @@ void setup() {
   
   Serial.println("ESP32 Calibrated PWM Driver Ready.");
 
-  pinMode(FL_A, OUTPUT); pinMode(FL_B, OUTPUT);
-  pinMode(RL_A, OUTPUT); pinMode(RL_B, OUTPUT);
-  pinMode(FR_A, OUTPUT); pinMode(FR_B, OUTPUT);
-  pinMode(RR_A, OUTPUT); pinMode(RR_B, OUTPUT);
+  #if ESP_ARDUINO_VERSION_MAJOR >= 3
+    // Modern ESP32 Core v3+ Hardware PWM
+    ledcAttach(FL_A, 5000, 8); ledcAttach(FL_B, 5000, 8);
+    ledcAttach(RL_A, 5000, 8); ledcAttach(RL_B, 5000, 8);
+    ledcAttach(FR_A, 5000, 8); ledcAttach(FR_B, 5000, 8);
+    ledcAttach(RR_A, 5000, 8); ledcAttach(RR_B, 5000, 8);
+  #else
+    // Legacy ESP32 Core v2 Hardware PWM Check
+    ledcSetup(0, 5000, 8); ledcAttachPin(FL_A, 0);
+    ledcSetup(1, 5000, 8); ledcAttachPin(FL_B, 1);
+    ledcSetup(2, 5000, 8); ledcAttachPin(RL_A, 2);
+    ledcSetup(3, 5000, 8); ledcAttachPin(RL_B, 3);
+    ledcSetup(4, 5000, 8); ledcAttachPin(FR_A, 4);
+    ledcSetup(5, 5000, 8); ledcAttachPin(FR_B, 5);
+    ledcSetup(6, 5000, 8); ledcAttachPin(RR_A, 6);
+    ledcSetup(7, 5000, 8); ledcAttachPin(RR_B, 7);
+  #endif
 
   // Set all to 0
   stopMotors();
@@ -71,8 +84,17 @@ void loop() {
   }
 }
 
+// --- Helper to support V2 / V3 API seamlessly ---
+void safePWM(int pin, int channel, int duty) {
+  #if ESP_ARDUINO_VERSION_MAJOR >= 3
+    ledcWrite(pin, duty);
+  #else
+    ledcWrite(channel, duty);
+  #endif
+}
+
 void applyPWM(int left_pwm, int right_pwm) {
-  // Apply individual motor calibration scalars
+  // Restore all calibration logic and proportional speeds!
   int pwm_fl = constrain(left_pwm * CALIB_FL, -255, 255);
   int pwm_rl = constrain(left_pwm * CALIB_RL, -255, 255);
   int pwm_fr = constrain(right_pwm * CALIB_FR, -255, 255);
@@ -80,36 +102,36 @@ void applyPWM(int left_pwm, int right_pwm) {
 
   // --- Front Left ---
   if (pwm_fl >= 0) {
-    analogWrite(FL_A, pwm_fl); analogWrite(FL_B, 0);
+    safePWM(FL_A, 0, pwm_fl); safePWM(FL_B, 1, 0);
   } else {
-    analogWrite(FL_A, 0);      analogWrite(FL_B, -pwm_fl);
+    safePWM(FL_A, 0, 0);      safePWM(FL_B, 1, -pwm_fl);
   }
 
   // --- Rear Left ---
   if (pwm_rl >= 0) {
-    analogWrite(RL_A, pwm_rl); analogWrite(RL_B, 0);
+    safePWM(RL_A, 2, pwm_rl); safePWM(RL_B, 3, 0);
   } else {
-    analogWrite(RL_A, 0);      analogWrite(RL_B, -pwm_rl);
+    safePWM(RL_A, 2, 0);      safePWM(RL_B, 3, -pwm_rl);
   }
 
   // --- Front Right ---
   if (pwm_fr >= 0) {
-    analogWrite(FR_A, pwm_fr); analogWrite(FR_B, 0);
+    safePWM(FR_A, 4, pwm_fr); safePWM(FR_B, 5, 0);
   } else {
-    analogWrite(FR_A, 0);      analogWrite(FR_B, -pwm_fr);
+    safePWM(FR_A, 4, 0);      safePWM(FR_B, 5, -pwm_fr);
   }
 
   // --- Rear Right ---
   if (pwm_rr >= 0) {
-    analogWrite(RR_A, pwm_rr); analogWrite(RR_B, 0);
+    safePWM(RR_A, 6, pwm_rr); safePWM(RR_B, 7, 0);
   } else {
-    analogWrite(RR_A, 0);      analogWrite(RR_B, -pwm_rr);
+    safePWM(RR_A, 6, 0);      safePWM(RR_B, 7, -pwm_rr);
   }
 }
 
 void stopMotors() {
-  analogWrite(FL_A, 0); analogWrite(FL_B, 0);
-  analogWrite(RL_A, 0); analogWrite(RL_B, 0);
-  analogWrite(FR_A, 0); analogWrite(FR_B, 0);
-  analogWrite(RR_A, 0); analogWrite(RR_B, 0);
+  safePWM(FL_A, 0, 0); safePWM(FL_B, 1, 0);
+  safePWM(RL_A, 2, 0); safePWM(RL_B, 3, 0);
+  safePWM(FR_A, 4, 0); safePWM(FR_B, 5, 0);
+  safePWM(RR_A, 6, 0); safePWM(RR_B, 7, 0);
 }
