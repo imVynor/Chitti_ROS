@@ -146,21 +146,12 @@ public:
     double left_vel = hw_commands_[0];
     double right_vel = hw_commands_[1];
     
-    char cmd = 'S';
-    double threshold = 0.5; // Trigger point in rad/s
+    int pwm_l = rads_to_pwm(left_vel);
+    int pwm_r = rads_to_pwm(right_vel);
 
-    if (left_vel > threshold && right_vel > threshold) {
-      cmd = 'F';
-    } else if (left_vel < -threshold && right_vel < -threshold) {
-      cmd = 'B';
-    } else if (left_vel < -threshold && right_vel > threshold) {
-      cmd = 'L';
-    } else if (left_vel > threshold && right_vel < -threshold) {
-      cmd = 'R';
-    }
+    std::string cmd_str = "L" + std::to_string(pwm_l) + "R" + std::to_string(pwm_r) + "\n";
 
     if (serial_fd_ != -1) {
-      std::string cmd_str(1, cmd);
       ::write(serial_fd_, cmd_str.c_str(), cmd_str.length());
     }
 

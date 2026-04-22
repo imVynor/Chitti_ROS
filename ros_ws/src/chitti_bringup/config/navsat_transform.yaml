@@ -11,4 +11,4 @@ navsat_transform:
     publish_filtered_gps: true
     use_odometry_yaw: false
     wait_for_datum: true
-    datum: [23.213556, 72.686485, 0.0]
+    datum: [23.2114, 72.6821, 0.0]

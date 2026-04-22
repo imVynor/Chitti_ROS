@@ -231,8 +231,8 @@ class OSRMPathNode(Node):
             self.get_logger().error(f'Path planning failed: {exc}')
 
     def route_to_path_msg(self, route, start_lat, start_lon, end_lat, end_lon):
-        datum_lat = 23.213556
-        datum_lon = 72.686485
+        datum_lat = self.default_lat
+        datum_lon = self.default_lon
 
         path_msg = Path()
         path_msg.header.frame_id = 'map'
