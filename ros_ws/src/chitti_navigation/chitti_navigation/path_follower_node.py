@@ -1,140 +1,216 @@
+"""
+Direct Pure-Pursuit path follower that bypasses Nav2 entirely.
+
+Subscribes to /global_path (from OSRM), computes steering via pure pursuit,
+and publishes cmd_vel directly to the diff_drive_controller with BEST_EFFORT
+QoS to match the ros2_control subscription.
+
+This eliminates the QoS mismatch that was silently dropping all Nav2 commands.
+"""
+
 import math
 
 import rclpy
-from nav2_msgs.action import FollowPath
-from nav_msgs.msg import Path
-from geometry_msgs.msg import PoseStamped, Quaternion
-from rclpy.action import ActionClient
+from geometry_msgs.msg import Twist, TransformStamped
+from nav_msgs.msg import Path, Odometry
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+import tf2_ros
 
 
-class PathFollowerNode(Node):
+class DirectPathFollower(Node):
 
     def __init__(self):
         super().__init__('path_follower_node')
-        self._action_client = ActionClient(self, FollowPath, 'follow_path')
-        self.path_sub = self.create_subscription(Path, '/global_path', self.path_callback, 10)
 
-        self._current_goal_handle = None
-        self._latest_path = None   # Always holds the most recently requested path
-        self._send_timer = None    # One-shot timer used after cancel delay
+        # ── Parameters ──────────────────────────────────────────────
+        self.declare_parameter('linear_speed', 0.20)       # m/s forward
+        self.declare_parameter('max_angular_speed', 1.0)   # rad/s max turn
+        self.declare_parameter('lookahead_dist', 0.6)      # metres ahead
+        self.declare_parameter('goal_tolerance', 0.3)       # metres to goal
+        self.declare_parameter('control_rate', 10.0)        # Hz
 
-        self.get_logger().info('PathFollowerNode started and waiting for /global_path')
+        self.linear_speed = self.get_parameter('linear_speed').value
+        self.max_angular = self.get_parameter('max_angular_speed').value
+        self.lookahead = self.get_parameter('lookahead_dist').value
+        self.goal_tol = self.get_parameter('goal_tolerance').value
+        rate = self.get_parameter('control_rate').value
 
-    def get_quaternion_from_yaw(self, yaw):
-        q = Quaternion()
-        q.x = 0.0
-        q.y = 0.0
-        q.z = math.sin(yaw / 2.0)
-        q.w = math.cos(yaw / 2.0)
-        return q
+        # ── State ───────────────────────────────────────────────────
+        self.path_poses = []       # list of (x, y) in odom frame
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_yaw = 0.0
+        self.have_odom = False
+        self.active = False        # are we currently following a path?
 
-    def interpolate_path(self, sparse_path, resolution=0.1):
-        dense_path = Path()
-        dense_path.header = sparse_path.header
-
-        if len(sparse_path.poses) < 2:
-            return sparse_path
-
-        for i in range(len(sparse_path.poses) - 1):
-            p1 = sparse_path.poses[i].pose.position
-            p2 = sparse_path.poses[i + 1].pose.position
-            dx = p2.x - p1.x
-            dy = p2.y - p1.y
-            distance = math.hypot(dx, dy)
-            yaw = math.atan2(dy, dx)
-            quat = self.get_quaternion_from_yaw(yaw)
-            num_steps = max(1, int(distance / resolution))
-
-            for j in range(num_steps):
-                fraction = j / float(num_steps)
-                step_pose = PoseStamped()
-                step_pose.header = sparse_path.header
-                step_pose.pose.position.x = p1.x + (dx * fraction)
-                step_pose.pose.position.y = p1.y + (dy * fraction)
-                step_pose.pose.orientation = quat
-                dense_path.poses.append(step_pose)
-
-        dense_path.poses.append(sparse_path.poses[-1])
-        self.get_logger().info(
-            f'Interpolated path: {len(sparse_path.poses)} -> {len(dense_path.poses)} poses'
+        # ── Publishers ──────────────────────────────────────────────
+        # CRITICAL: use BEST_EFFORT to match diff_drive_controller's QoS
+        cmd_vel_qos = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
         )
-        return dense_path
+        self.cmd_pub = self.create_publisher(
+            Twist, '/diff_drive_controller/cmd_vel', cmd_vel_qos
+        )
 
-    def path_callback(self, msg):
-        self.get_logger().info(f'Received new /global_path with {len(msg.poses)} poses')
+        # ── Subscribers ─────────────────────────────────────────────
+        self.path_sub = self.create_subscription(
+            Path, '/global_path', self.path_callback, 10
+        )
 
-        # Always remember the newest path — this is the destination we want.
-        self._latest_path = msg
+        # Subscribe to odometry from diff_drive_controller
+        odom_qos = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+        )
+        self.odom_sub = self.create_subscription(
+            Odometry, '/diff_drive_controller/odom', self.odom_callback, odom_qos
+        )
 
-        # If a timer from a previous mid-flight cancel is pending, kill it.
-        if self._send_timer is not None:
-            self._send_timer.cancel()
-            self._send_timer = None
+        # Also try the EKF filtered odometry
+        self.odom_sub2 = self.create_subscription(
+            Odometry, '/odometry/filtered', self.odom_callback, 10
+        )
 
-        if self._current_goal_handle is not None:
-            # Fire-and-forget cancel. We don't wait for the result because the callback
-            # chain was causing race conditions where the new path arrived with 0 poses.
-            # Instead we give Nav2 a fixed 400 ms to process the cancel before we send.
-            self.get_logger().info('Active goal found — cancelling and sending new path in 400 ms.')
-            self._current_goal_handle.cancel_goal_async()
-            self._current_goal_handle = None
-            self._send_timer = self.create_timer(0.4, self._on_send_timer)
+        # ── Control loop timer ──────────────────────────────────────
+        self.control_timer = self.create_timer(1.0 / rate, self.control_loop)
+
+        self.get_logger().info(
+            f'DirectPathFollower started: speed={self.linear_speed} m/s, '
+            f'lookahead={self.lookahead} m, publishing cmd_vel with BEST_EFFORT QoS'
+        )
+
+    # ─────────────────────────────────────────────────────────────────
+    #  Callbacks
+    # ─────────────────────────────────────────────────────────────────
+
+    def odom_callback(self, msg: Odometry):
+        self.robot_x = msg.pose.pose.position.x
+        self.robot_y = msg.pose.pose.position.y
+        q = msg.pose.pose.orientation
+        # Extract yaw from quaternion
+        siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+        cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+        self.robot_yaw = math.atan2(siny_cosp, cosy_cosp)
+        self.have_odom = True
+
+    def path_callback(self, msg: Path):
+        if len(msg.poses) < 2:
+            self.get_logger().warn('Received path with < 2 poses, ignoring.')
+            return
+
+        self.path_poses = [
+            (p.pose.position.x, p.pose.position.y) for p in msg.poses
+        ]
+        self.active = True
+        self.get_logger().info(
+            f'New path received with {len(self.path_poses)} waypoints. '
+            f'Following directly (bypassing Nav2).'
+        )
+
+    # ─────────────────────────────────────────────────────────────────
+    #  Pure pursuit control loop
+    # ─────────────────────────────────────────────────────────────────
+
+    def control_loop(self):
+        if not self.active or not self.path_poses:
+            return
+
+        if not self.have_odom:
+            # No odometry yet — send zero and wait
+            self.get_logger().info(
+                'Waiting for odometry on /diff_drive_controller/odom or '
+                '/odometry/filtered ...', throttle_duration_sec=5.0
+            )
+            return
+
+        # Check if we reached the final goal
+        gx, gy = self.path_poses[-1]
+        dist_to_goal = math.hypot(gx - self.robot_x, gy - self.robot_y)
+        if dist_to_goal < self.goal_tol:
+            self.get_logger().info('Reached goal! Stopping.')
+            self.active = False
+            self.path_poses = []
+            self._publish_stop()
+            return
+
+        # Find the lookahead point on the path
+        lookahead_pt = self._find_lookahead_point()
+        if lookahead_pt is None:
+            self.get_logger().warn('No lookahead point found, stopping.')
+            self._publish_stop()
+            return
+
+        # Compute steering angle via pure pursuit
+        lx, ly = lookahead_pt
+        dx = lx - self.robot_x
+        dy = ly - self.robot_y
+        target_angle = math.atan2(dy, dx)
+        angle_error = self._normalize_angle(target_angle - self.robot_yaw)
+
+        # If we need to turn a lot, rotate in place first
+        cmd = Twist()
+        if abs(angle_error) > 0.8:  # ~45 degrees
+            cmd.linear.x = 0.0
+            cmd.angular.z = max(-self.max_angular,
+                                min(self.max_angular, angle_error * 2.0))
         else:
-            self._do_send_latest()
+            cmd.linear.x = self.linear_speed
+            # Pure pursuit curvature: angular = 2 * sin(alpha) / L
+            L = math.hypot(dx, dy)
+            if L > 0.01:
+                curvature = 2.0 * math.sin(angle_error) / L
+                cmd.angular.z = max(-self.max_angular,
+                                    min(self.max_angular,
+                                        self.linear_speed * curvature))
 
-    def _on_send_timer(self):
-        # Destroy the one-shot timer then send.
-        self._send_timer.cancel()
-        self._send_timer = None
-        self._do_send_latest()
+        self.cmd_pub.publish(cmd)
 
-    def _do_send_latest(self):
-        if self._latest_path is None:
-            return
+    def _find_lookahead_point(self):
+        """Find the point on the path that is ~lookahead_dist ahead."""
+        best_idx = 0
+        best_dist = float('inf')
 
-        path = self._latest_path
-        self._latest_path = None  # Consume it so we don't send it twice.
+        # Find closest point on path to robot
+        for i, (px, py) in enumerate(self.path_poses):
+            d = math.hypot(px - self.robot_x, py - self.robot_y)
+            if d < best_dist:
+                best_dist = d
+                best_idx = i
 
-        if not self._action_client.wait_for_server(timeout_sec=2.0):
-            self.get_logger().error('Nav2 FollowPath action server not available')
-            return
+        # Walk forward along the path until we reach lookahead distance
+        for i in range(best_idx, len(self.path_poses)):
+            px, py = self.path_poses[i]
+            d = math.hypot(px - self.robot_x, py - self.robot_y)
+            if d >= self.lookahead:
+                return (px, py)
 
-        dense_path = self.interpolate_path(path)
+        # If we can't find a point far enough ahead, use the last point
+        if self.path_poses:
+            return self.path_poses[-1]
+        return None
 
-        if len(dense_path.poses) == 0:
-            self.get_logger().error('Interpolated path has 0 poses — skipping goal.')
-            return
+    def _publish_stop(self):
+        cmd = Twist()
+        cmd.linear.x = 0.0
+        cmd.angular.z = 0.0
+        self.cmd_pub.publish(cmd)
 
-        goal_msg = FollowPath.Goal()
-        goal_msg.path = dense_path
-        goal_msg.controller_id = 'FollowPath'
-
-        self.get_logger().info(f'Sending goal to Nav2 FollowPath ({len(dense_path.poses)} poses)')
-        send_future = self._action_client.send_goal_async(goal_msg)
-        send_future.add_done_callback(self._goal_response_callback)
-
-    def _goal_response_callback(self, future):
-        goal_handle = future.result()
-        if not goal_handle.accepted:
-            self.get_logger().error('FollowPath goal rejected by Nav2')
-            self._current_goal_handle = None
-            return
-        self.get_logger().info('FollowPath goal accepted by Nav2')
-        self._current_goal_handle = goal_handle
-
-        # Watch for natural completion so we clear the handle when done.
-        result_future = goal_handle.get_result_async()
-        result_future.add_done_callback(self._on_goal_done)
-
-    def _on_goal_done(self, future):
-        self.get_logger().info('FollowPath goal completed or preempted.')
-        self._current_goal_handle = None
+    @staticmethod
+    def _normalize_angle(angle):
+        while angle > math.pi:
+            angle -= 2.0 * math.pi
+        while angle < -math.pi:
+            angle += 2.0 * math.pi
+        return angle
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = PathFollowerNode()
+    node = DirectPathFollower()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
