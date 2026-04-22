@@ -73,31 +73,12 @@ class FakeImuOnly(Node):
         fix_msg.status.service = NavSatStatus.SERVICE_GPS
 
         if self.path_points and self.path_index < len(self.path_points):
-            lat, lon = self.path_points[self.path_index]
-            
-            # Move slowly along the path (approx 1.0 m/s)
-            # timer_callback is 10Hz (0.1s), so we move 0.1 meters per tick.
-            # We skip points until we've moved roughly that distance.
-            speed_mps = 1.0
-            dist_per_tick = speed_mps * 0.1 # 0.1 meters
-            
-            accumulated_dist = 0.0
-            while self.path_index < len(self.path_points) - 1:
-                p1 = self.path_points[self.path_index]
-                p2 = self.path_points[self.path_index + 1]
-                # Rough distance in meters (approx 111320m per degree)
-                d = math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 111320.0
-                accumulated_dist += d
-                if accumulated_dist >= dist_per_tick:
-                    break
-                self.path_index += 1
-        else:
-            # No active path or path finished — stay at last known position.
-            lat, lon = self.current_lat, self.current_lon
+            # We used to move the fake robot here, but that bypasses the hardware!
+            # Now we keep the fake GPS static so the navigation stack actually
+            # commands the physical motors to drive there.
+            pass
 
-        # Always keep track of where we currently "are" for path_callback to use.
-        self.current_lat = lat
-        self.current_lon = lon
+        lat, lon = self.current_lat, self.current_lon
 
         fix_msg.latitude = float(lat)
         fix_msg.longitude = float(lon)
