@@ -18,25 +18,69 @@ except Exception as e:
 
 print("\n--- Calibration Testing Controller ---")
 print("This checks the Proportional PWM firmware.")
-print("Type Left and Right PWM speeds (-255 to 255).")
-print("Example: '150 150' goes Forward.")
-print("Example: '-100 100' spins Left.")
-print("Example: '0 0' Stops.")
+print("Use WASD keys to control motion:")
+print("  W = Forward, S = Backward, A = Left spin, D = Right spin")
+print("  X = Stop")
+print("Use Q/E to change speed:")
+print("  Q = Faster, E = Slower")
+print("You can still enter raw values like '150 150' if needed.")
 print("Press Ctrl+C to quit.\n")
+
+MAX_PWM = 255
+MIN_PWM = 0
+SPEED_STEP = 25
+current_speed = 120
+
+
+def clamp(value, low, high):
+    return max(low, min(high, value))
+
+
+def movement_to_pwm(key, speed):
+    if key == 'W':
+        return speed, speed
+    if key == 'S':
+        return -speed, -speed
+    if key == 'A':
+        return -speed, speed
+    if key == 'D':
+        return speed, -speed
+    if key == 'X':
+        return 0, 0
+    return None
 
 try:
     while True:
-        # Get keyboard input from the user
-        user_input = input("Enter Left and Right PWM (e.g. '150 150'): ").strip()
+        user_input = input(f"Command [W/A/S/D/X, Q/E, or 'L R'] (speed={current_speed}): ").strip()
+        if not user_input:
+            continue
+
+        key = user_input.upper()
+
+        if key == 'Q':
+            old_speed = current_speed
+            current_speed = clamp(current_speed + SPEED_STEP, MIN_PWM, MAX_PWM)
+            print(f"--> Speed increased: {old_speed} -> {current_speed}")
+            continue
+
+        if key == 'E':
+            old_speed = current_speed
+            current_speed = clamp(current_speed - SPEED_STEP, MIN_PWM, MAX_PWM)
+            print(f"--> Speed decreased: {old_speed} -> {current_speed}")
+            continue
+
+        pwm_values = movement_to_pwm(key, current_speed)
+        if pwm_values is not None:
+            left_val, right_val = pwm_values
+        else:
+            parts = user_input.split()
         
         try:
-            parts = user_input.split()
-            if len(parts) == 1 and parts[0].upper() == 'S':
-                # Easy shortcut for STOP
-                left_val, right_val = 0, 0
-            else:
+            if pwm_values is None:
                 left_val = int(parts[0])
                 right_val = int(parts[1])
+                left_val = clamp(left_val, -MAX_PWM, MAX_PWM)
+                right_val = clamp(right_val, -MAX_PWM, MAX_PWM)
             
             # Format the continuous string exactly how the ESP32 expects it now!
             command_string = f"L{left_val}R{right_val}\n"
@@ -46,9 +90,9 @@ try:
             print(f"--> Sent raw bytes: {command_string.strip()}")
             
         except ValueError:
-            print("Invalid format! Please type two numbers separated by a space (e.g. '100 100')")
+            print("Invalid input! Use W/A/S/D/X, Q/E, or two numbers like '100 100'.")
         except IndexError:
-            print("You must provide exactly two numbers!")
+            print("You must provide exactly two numbers for raw PWM input!")
 
 except KeyboardInterrupt:
     print("\nStopping robot and exiting...")
